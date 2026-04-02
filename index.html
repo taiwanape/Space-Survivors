@@ -58,9 +58,14 @@
         h1.sys-title { font-size: 36px; margin: 0 0 10px 0; color: #e2e8f0; text-align: center; text-transform: uppercase; letter-spacing: 3px; border-bottom: 2px solid #334155; padding-bottom: 10px; }
         .coin-display { font-size: 20px; color: #facc15; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 15px; }
         
-        /* 標題畫面 */
-        .mega-title { font-size: 64px; color: #38bdf8; text-shadow: 0 0 30px #0ea5e9; letter-spacing: 8px; font-weight: 900; text-align: center; margin-top: 10vh; margin-bottom: 0; }
+        /* 標題畫面與封面 */
+        .title-cover {
+            background-color: rgba(2, 2, 5, 0.85); /* 🌟 移除了原本的靜態地球圖，改為半透明遮罩，讓底層 Canvas 動畫透出來 */
+            backdrop-filter: blur(4px);
+        }
+        .mega-title { font-size: 64px; color: #38bdf8; text-shadow: 0 0 30px #0ea5e9, 0 0 60px #0284c7; letter-spacing: 8px; font-weight: 900; text-align: center; margin-top: 10vh; margin-bottom: 0; }
         .sub-title { font-size: 20px; color: #a78bfa; letter-spacing: 6px; text-align: center; margin-top: 5px; margin-bottom: 10vh; }
+        
         .menu-list { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 300px; margin: 0 auto; }
         .menu-list button { width: 100%; padding: 15px; font-size: 20px; }
 
@@ -121,6 +126,18 @@
         /* 閃爍文字 */
         .blinking-text { font-size: 18px; color: #e2e8f0; animation: blink 1.5s infinite; letter-spacing: 2px; text-align: center; text-shadow: 0 0 10px #ffffff; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* 🌟 徹底翻新：結算畫面改為「終端機硬重啟 (CRT開啟)」的硬核切換特效，拒絕半透明！ */
+        @keyframes terminalBoot {
+            0% { transform: scaleY(0.01) scaleX(0); filter: brightness(300%) contrast(200%); }
+            40% { transform: scaleY(0.01) scaleX(1); filter: brightness(300%) contrast(200%); }
+            100% { transform: scaleY(1) scaleX(1); filter: brightness(100%) contrast(100%); }
+        }
+        #game-over-modal:not(.hidden) { 
+            animation: terminalBoot 0.45s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; 
+            transform-origin: center; 
+            opacity: 1 !important; /* 強制不透明 */
+        }
 
         @media (max-width: 1024px) {
             .mega-title { font-size: 56px; letter-spacing: 6px; }
@@ -183,14 +200,20 @@
         <button id="dash-btn" onclick="triggerDash()">空間<br>摺疊</button>
     </div>
 
-    <!-- 標題畫面 -->
-    <div id="title-screen" class="modal" onclick="enterMenu()" style="cursor: pointer; z-index: 30; background: rgba(2, 2, 5, 0.9);">
-        <div class="title-container" style="text-align: center; margin-top: 20vh;">
-            <h1 class="mega-title" style="margin-top: 0;">星際倖存者</h1>
-            <h2 class="sub-title" style="font-weight: bold;">Project Salvation</h2>
+    <!-- 標題畫面與封面 -->
+    <div id="title-screen" class="modal title-cover" onclick="enterMenu()" style="cursor: pointer; z-index: 30;">
+        <div class="title-container" style="text-align: center; margin-top: 15vh;">
+            <h1 class="mega-title" style="margin-top: 0; text-shadow: 0 0 40px #0ea5e9, 0 0 80px #0284c7;">星際倖存者</h1>
+            <h2 class="sub-title" style="font-weight: bold; background: linear-gradient(90deg, #a78bfa, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Project Salvation</h2>
             <p class="blinking-text" style="margin-top: 80px;">- 點擊螢幕任意處進入系統 -</p>
         </div>
-        <div style="position: absolute; bottom: env(safe-area-inset-bottom, 20px); font-size: 12px; color: #475569; letter-spacing: 2px;">VER 1.2.0 | FULL EVOLUTION</div>
+        <!-- 作者與版本資訊 -->
+        <div style="position: absolute; bottom: calc(env(safe-area-inset-bottom, 20px) + 30px); font-size: 14px; color: #94a3b8; letter-spacing: 3px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+            CREATED BY 林小木
+        </div>
+        <div style="position: absolute; bottom: env(safe-area-inset-bottom, 20px); font-size: 12px; color: #475569; letter-spacing: 2px;">
+            VER 1.3.0 | FULL EVOLUTION
+        </div>
     </div>
 
     <!-- 主選單 -->
@@ -578,6 +601,7 @@
 
         const stars = []; for (let i = 0; i < 200; i++) stars.push({ x: Math.random() * 3000, y: Math.random() * 3000, size: Math.random() * 1.5 + 0.5, depth: Math.random() * 0.4 + 0.1 });
         const nebulas = []; for(let i = 0; i < 8; i++) nebulas.push({ x: Math.random() * 4000, y: Math.random() * 4000, radius: 400 + Math.random() * 600, hue: Math.random() * 360, depth: 0.02 });
+        // 🌟 恢復遊戲內的動態漂浮行星
         const planets = []; for(let i = 0; i < 4; i++) planets.push({ x: Math.random() * 5000, y: Math.random() * 5000, radius: 100 + Math.random() * 200, color: `hsl(${Math.random() * 360}, 40%, 30%)`, hasRing: Math.random() > 0.5, ringAngle: Math.random() * Math.PI, depth: 0.02 + Math.random() * 0.06, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4, rotSpeed: (Math.random() - 0.5) * 0.005 });
 
         const keys = {};
@@ -775,13 +799,13 @@
             // 死亡子彈時間邏輯
             if (gameState === 'dying') {
                 deathTimer--;
-                // 🌟 新增：衝擊波擴大與白光衰減
-                deathShockwaveRadius += 40; 
-                deathFlashAlpha *= 0.85;
+                // 🌟 衝擊波與白光衰減極速化
+                deathShockwaveRadius += 150; 
+                deathFlashAlpha *= 0.7;
 
                 for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx; particles[i].y += particles[i].vy; particles[i].life--; particles[i].vx *= 0.95; particles[i].vy *= 0.95; if (particles[i].life <= 0) particles.splice(i, 1); }
                 for (let i = floatTexts.length - 1; i >= 0; i--) { floatTexts[i].y -= 0.5; floatTexts[i].life--; if (floatTexts[i].life <= 0) floatTexts.splice(i, 1); }
-                // 🌟 讓敵人在死亡時幾乎定格
+                // 讓敵人在死亡時幾乎定格
                 enemies.forEach(en => { en.x += Math.cos(en.angle) * en.speed * 0.02; en.y += Math.sin(en.angle) * en.speed * 0.02; });
                 if (deathTimer <= 0) gameOver();
                 return; 
@@ -1090,9 +1114,9 @@
                 
                 if (player.hp <= 0 && gameState === 'playing') { 
                     gameState = 'dying';
-                    // 🌟 縮短等待時間 (90幀 = 1.5秒)，加大震動，重置特效
-                    deathTimer = 90; 
-                    screenShake = 80; 
+                    // 🌟 終極加速：縮短為 15 幀 (約 0.25 秒)，爆炸後瞬間切換！
+                    deathTimer = 15; 
+                    screenShake = 120; // 震動再加大
                     deathShockwaveRadius = 1;
                     deathFlashAlpha = 1.0;
                     document.getElementById('game-ui').classList.add('hidden'); 
@@ -1101,7 +1125,7 @@
                     spawnParticles(worldX, worldY, '#facc15', 100); 
                     spawnParticles(worldX, worldY, '#ef4444', 100); 
                     
-                    // 🌟 追加極速散射的爆炸碎片
+                    // 追加極速散射的爆炸碎片
                     for(let i=0; i<80; i++) {
                         const angle = Math.random() * Math.PI * 2, speed = Math.random() * 20 + 10;
                         particles.push({ x: worldX, y: worldY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 15 + Math.random() * 10, maxLife: 25, color: '#ffffff', size: Math.random() * 5 + 2 });
@@ -1157,6 +1181,7 @@
             nebulas.forEach(nebula => { let nx = (nebula.x - drawWorldX * nebula.depth) % 4000; let ny = (nebula.y - drawWorldY * nebula.depth) % 4000; if (nx < -1000) nx += 4000; if (ny < -1000) ny += 4000; const grad = ctx.createRadialGradient(nx, ny, 0, nx, ny, nebula.radius); grad.addColorStop(0, `hsla(${bgHue}, 80%, 50%, 0.08)`); grad.addColorStop(1, `hsla(${bgHue}, 80%, 50%, 0)`); ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(nx, ny, nebula.radius, 0, Math.PI * 2); ctx.fill(); });
             ctx.globalCompositeOperation = 'source-over';
             
+            // 🌟 恢復行星 (planets) 的繪製邏輯
             planets.forEach(planet => { 
                 let driftX = planet.x + frameCount * planet.vx;
                 let driftY = planet.y + frameCount * planet.vy;
@@ -1310,7 +1335,7 @@
             ctx.restore();
 
             if (gameState === 'dying') {
-                // 🌟 新增：繪製爆炸衝擊波與全螢幕閃白
+                // 繪製爆炸衝擊波與全螢幕閃白
                 ctx.save(); 
                 ctx.translate(canvas.width / 2, canvas.height / 2);
                 
@@ -1334,25 +1359,25 @@
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
 
-                // 調整過後的血紅疊加層 (配合縮短的 90 幀)
-                const fadeAlpha = Math.min(0.7, (90 - deathTimer) / 90);
+                // 🌟 調整過後的血紅疊加層 (配合極短的 15 幀)
+                const fadeAlpha = Math.min(0.8, (15 - deathTimer) / 15);
                 ctx.fillStyle = `rgba(159, 18, 57, ${fadeAlpha})`; 
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                if (deathTimer < 70 && Math.random() < 0.4) {
+                if (deathTimer < 10 && Math.random() < 0.6) {
                     ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.15})`;
                     ctx.fillRect(0, Math.random() * canvas.height, canvas.width, Math.random() * 15 + 2);
                     ctx.fillStyle = `rgba(56, 189, 248, ${Math.random() * 0.2})`;
                     ctx.fillRect(0, Math.random() * canvas.height, canvas.width, Math.random() * 30 + 5);
                 }
 
-                const textAlpha = Math.min(1, (90 - deathTimer) / 40);
+                const textAlpha = Math.min(1, (15 - deathTimer) / 5);
                 ctx.font = '900 48px monospace';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
                 let glitchX = 0;
-                if (deathTimer < 60 && Math.random() < 0.3) glitchX = (Math.random() - 0.5) * 15;
+                if (deathTimer < 12 && Math.random() < 0.5) glitchX = (Math.random() - 0.5) * 25;
                 
                 ctx.fillStyle = `rgba(56, 189, 248, ${textAlpha * 0.7})`; 
                 ctx.fillText("CRITICAL DAMAGE", canvas.width/2 + glitchX - 4, canvas.height/2 - 50);
