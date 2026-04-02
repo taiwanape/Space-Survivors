@@ -18,7 +18,7 @@
         button.btn.danger:active { box-shadow: inset 0 2px 0 rgba(255,255,255,0.2), 0 0 0 #9f1239; }
         button.btn:disabled { background: #475569; border-color: #334155; box-shadow: 0 4px 0 #1e293b; transform: none; cursor: not-allowed; color: #94a3b8; }
 
-        /* === 遊戲內 HUD (完美還原 VS 風格) === */
+        /* === 遊戲內 HUD === */
         .top-exp-bar { position: absolute; top: env(safe-area-inset-top, 0px); left: 0; width: 100%; height: 12px; background: rgba(0,0,0,0.8); border-bottom: 2px solid #0f172a; z-index: 10; pointer-events: none; }
         #exp-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #60a5fa, #38bdf8); width: 0%; transition: width 0.2s ease-out; box-shadow: 0 0 8px #3b82f6; }
         
@@ -333,8 +333,8 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        let saveData = JSON.parse(localStorage.getItem('spaceSurvivorsSave_v11')) || { coins: 0, upgrades: { hp: 0, speed: 0, damage: 0, magnet: 0 } };
-        function saveGame() { localStorage.setItem('spaceSurvivorsSave_v11', JSON.stringify(saveData)); updateMenuCoins(); }
+        let saveData = JSON.parse(localStorage.getItem('spaceSurvivorsSave_v12')) || { coins: 0, upgrades: { hp: 0, speed: 0, damage: 0, magnet: 0 } };
+        function saveGame() { localStorage.setItem('spaceSurvivorsSave_v12', JSON.stringify(saveData)); updateMenuCoins(); }
 
         let gameState = 'title'; // title, menu, char_select, stage_select, shop, playing, paused, level_up, chest, dying, gameover
         
@@ -342,11 +342,11 @@
         let enemies = [], bullets = [], gems = [], coinsArr = [], floatTexts = [], particles = [];
         let gravityZones = [], miniBlackHoles = [], destructibles = [], consumables = []; 
         let player = { weapons: {}, passives: {}, dashCd: 0, isDashing: false, dashTimer: 0, invincibleTimer: 0 };
-        // 🌟 新增：死亡動畫計時器
-        let screenShake = 0, deathTimer = 0;
+        let bossSpawned = false, currentBoss = null, warningTimer = 0;
+        // 🌟 新增：爆炸衝擊波與閃白特效的變數
+        let screenShake = 0, deathTimer = 0, deathShockwaveRadius = 0, deathFlashAlpha = 0;
         let globalDmgMult = 1, globalCdMult = 1, globalProjSpeedMult = 1, globalAreaMult = 1;
 
-        // 🌟 嚴格裝備上限
         const MAX_WEAPONS = 6;
         const MAX_PASSIVES = 6;
 
@@ -458,7 +458,6 @@
             globalDmgMult = char.damage + (saveData.upgrades.damage || 0) * 0.05; 
             globalCdMult = 1.0; globalProjSpeedMult = 1.0; globalAreaMult = 1.0;
             
-            // 計算被動裝備加成
             if (player.passives.damage) globalDmgMult += player.passives.damage.level * 0.10;
             if (player.passives.cooldown) globalCdMult -= player.passives.cooldown.level * 0.08;
             if (player.passives.proj_speed) globalProjSpeedMult += player.passives.proj_speed.level * 0.10;
@@ -469,15 +468,12 @@
             player.pickupRadius = magnetBase; 
             
             globalCdMult = Math.max(0.1, globalCdMult); 
-            
-            // 角色特殊被動：漫遊者每 10 級加傷害
             if (char.id === 'ranger') globalDmgMult += Math.floor(player.level / 10) * 0.1;
         }
 
         function updateInventoryUI() {
             const updateRow = (wRowId, pRowId) => {
                 const wRow = document.getElementById(wRowId); if(!wRow) return; wRow.innerHTML = '';
-                // 畫 6 個主武器框
                 for(let i=0; i<MAX_WEAPONS; i++) {
                     const keys = Object.keys(player.weapons); const slot = document.createElement('div');
                     if (i < keys.length) {
@@ -489,7 +485,6 @@
                     wRow.appendChild(slot);
                 }
                 const pRow = document.getElementById(pRowId); if(!pRow) return; pRow.innerHTML = '';
-                // 畫 6 個被動框
                 for(let i=0; i<MAX_PASSIVES; i++) {
                     const keys = Object.keys(player.passives); const slot = document.createElement('div');
                     if (i < keys.length) {
@@ -547,7 +542,7 @@
             
             calcStats(); acquireWeapon(char.weapon); 
             
-            worldX = 0; worldY = 0; score = 0; frameCount = 0; gameSeconds = 0; collectedCoins = 0; screenShake = 0;
+            worldX = 0; worldY = 0; score = 0; frameCount = 0; gameSeconds = 0; collectedCoins = 0; screenShake = 0; deathTimer = 0;
             enemies = []; bullets = []; gems = []; coinsArr = []; floatTexts = []; particles = []; gravityZones = []; miniBlackHoles = []; destructibles = []; consumables = []; 
             bossSpawned = false; currentBoss = null; warningTimer = 0;
             
@@ -583,10 +578,8 @@
 
         const stars = []; for (let i = 0; i < 200; i++) stars.push({ x: Math.random() * 3000, y: Math.random() * 3000, size: Math.random() * 1.5 + 0.5, depth: Math.random() * 0.4 + 0.1 });
         const nebulas = []; for(let i = 0; i < 8; i++) nebulas.push({ x: Math.random() * 4000, y: Math.random() * 4000, radius: 400 + Math.random() * 600, hue: Math.random() * 360, depth: 0.02 });
-        // 🌟 新增：行星自轉與獨立漂浮屬性 (vx, vy, rotSpeed)，並加大半徑與深度的亂數範圍，使之更具立體感
         const planets = []; for(let i = 0; i < 4; i++) planets.push({ x: Math.random() * 5000, y: Math.random() * 5000, radius: 100 + Math.random() * 200, color: `hsl(${Math.random() * 360}, 40%, 30%)`, hasRing: Math.random() > 0.5, ringAngle: Math.random() * Math.PI, depth: 0.02 + Math.random() * 0.06, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4, rotSpeed: (Math.random() - 0.5) * 0.005 });
 
-        // --- 虛擬搖桿與鍵盤輸入 ---
         const keys = {};
         window.addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); keys[e.code] = true; if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); if (e.code === 'Space') triggerDash(); });
         window.addEventListener('keyup', e => keys[e.code] = false);
@@ -597,51 +590,28 @@
 
         function getScreenPos(wx, wy) { return { x: wx - worldX + canvas.width / 2, y: wy - worldY + canvas.height / 2 }; }
 
-        // 🌟 嚴格波次生成系統 (Wave Manager)
         function spawnEnemy() {
-            // 最多允許同畫面 350 隻怪物 (效能考量)
             if (enemies.length > 350) return; 
-
             const angle = Math.random() * Math.PI * 2; 
-            // 讓怪物稍微在畫面外一點生成
             const spawnRadius = Math.max(canvas.width, canvas.height) / 2 + 100;
-            
-            // 基礎難度係數 (隨分鐘數增加)
             const min = Math.floor(gameSeconds / 60);
             const timeScale = 1 + (min * 0.4);
             
-            let type = 'minion'; 
-            let isSwarm = false;
+            let type = 'minion'; let isSwarm = false;
 
-            // 特殊波次設定 (參考 VS 節奏)
-            if (gameSeconds % 60 === 0 && gameSeconds > 0) {
-                // 每分鐘的整點，產生精英怪
-                type = 'elite';
-            } else if (gameSeconds % 180 >= 170) {
-                // 每 3 分鐘的前 10 秒，產生蟲群衝鋒 (Swarm)
-                type = 'minion'; isSwarm = true;
-            } else if (min >= 2 && Math.random() < 0.15) {
-                type = 'splitter'; // 2分鐘後常態產出隕石
-            } else if (min >= 5 && Math.random() < 0.05) {
-                type = 'elite'; // 5分鐘後隨機產出精英
-            }
+            if (gameSeconds % 60 === 0 && gameSeconds > 0) { type = 'elite'; } 
+            else if (gameSeconds % 180 >= 170) { type = 'minion'; isSwarm = true; } 
+            else if (min >= 2 && Math.random() < 0.15) { type = 'splitter'; } 
+            else if (min >= 5 && Math.random() < 0.05) { type = 'elite'; }
 
             let size, speed, hpCalc, color, vCount;
-            if (type === 'elite') {
-                size = 30 + Math.random() * 10; speed = 0.6 + Math.random() * 0.2;
-                hpCalc = 80 * timeScale; color = '#9f1239'; vCount = 4; // 深紅方塊
-            } else if (type === 'splitter') {
-                size = 20 + Math.random() * 5; speed = 1.0 + Math.random() * 0.5;
-                hpCalc = 20 * timeScale; color = '#9a3412'; vCount = 7; // 棕色多邊形
-            } else { 
-                size = 12 + Math.random() * 4; speed = (isSwarm ? 2.5 : 1.2) + Math.random() * 0.5;
-                hpCalc = (isSwarm ? 1 : 5) * timeScale; color = isSwarm ? '#3b82f6' : '#1e293b'; vCount = 5; 
-            }
+            if (type === 'elite') { size = 30 + Math.random() * 10; speed = 0.6 + Math.random() * 0.2; hpCalc = 80 * timeScale; color = '#9f1239'; vCount = 4; } 
+            else if (type === 'splitter') { size = 20 + Math.random() * 5; speed = 1.0 + Math.random() * 0.5; hpCalc = 20 * timeScale; color = '#9a3412'; vCount = 7; } 
+            else { size = 12 + Math.random() * 4; speed = (isSwarm ? 2.5 : 1.2) + Math.random() * 0.5; hpCalc = (isSwarm ? 1 : 5) * timeScale; color = isSwarm ? '#3b82f6' : '#1e293b'; vCount = 5; }
 
             const vertices = [];
             for(let i=0; i<vCount; i++){ vertices.push({ a: (i/vCount) * Math.PI * 2, r: 0.7 + Math.random() * 0.6 }); }
             
-            // 如果是 Swarm，一次生一排
             let spawnCount = isSwarm ? 5 : 1;
             for(let k=0; k<spawnCount; k++) {
                 let offsetA = angle + (k * 0.1);
@@ -649,7 +619,6 @@
             }
         }
 
-        // 15分鐘死神降臨
         function spawnDeath() {
             const angle = Math.random() * Math.PI * 2; const spawnRadius = Math.max(canvas.width, canvas.height) / 2 + 200;
             const vertices = []; for(let i=0; i<16; i++){ vertices.push({ a: (i/16) * Math.PI * 2, r: 0.8 + Math.random() * 0.4 }); }
@@ -663,14 +632,13 @@
                 particles.push({ x: x, y: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 15 + Math.random() * 15, maxLife: 30, color: color, size: Math.random() * 3 + 1 });
             }
         }
-
+        
         function spawnDestructible() {
             const angle = Math.random() * Math.PI * 2; 
             const spawnRadius = Math.max(canvas.width, canvas.height) / 2 + 50 + Math.random() * 200;
             destructibles.push({ x: worldX + Math.cos(angle) * spawnRadius, y: worldY + Math.sin(angle) * spawnRadius, size: 20, hp: 1 });
         }
 
-        // 🌟 寶箱開箱動畫系統
         let chestRewardItem = null;
         function triggerChestAnimation() {
             gameState = 'chest'; 
@@ -683,11 +651,9 @@
             box.className = 'chest-img'; box.innerText = '📦'; box.style.pointerEvents = 'auto';
             rewardUi.style.display = 'none';
             
-            // 決定寶箱內容
             chestRewardItem = null;
-            let goldReward = 100 + Math.floor(Math.random() * 100); // 基礎金幣
+            let goldReward = 100 + Math.floor(Math.random() * 100); 
             
-            // 1. 檢查是否能進化
             let readyEvo = null;
             for (let id in player.weapons) {
                 let w = player.weapons[id];
@@ -699,7 +665,6 @@
                 chestRewardItem = { type: 'evo', id: readyEvo, html: `<span class="tag evo-tag">超級進化</span><h2>${db.evoIcon} ${db.evoName}</h2><p>【${db.name}】突破極限！</p>` };
                 goldReward += 200;
             } else {
-                // 2. 如果不能進化，從已有的裝備中隨機挑一個沒滿級的升級
                 let upgradePool = [];
                 for(let w in player.weapons) { if(player.weapons[w].level < WEAPON_DB[w].maxLevel) upgradePool.push({id: w, type:'weapon'}); }
                 for(let p in player.passives) { if(player.passives[p].level < PASSIVE_DB[p].maxLevel) upgradePool.push({id: p, type:'passive'}); }
@@ -710,7 +675,6 @@
                     let nextLv = (pick.type === 'weapon' ? player.weapons[pick.id].level : player.passives[pick.id].level) + 1;
                     chestRewardItem = { type: pick.type, id: pick.id, html: `<span class="tag">模組強化</span><h2>${db.icon} ${db.name}</h2><p>等級提升至 Lv.${nextLv}</p>` };
                 } else {
-                    // 全滿了給大錢袋
                     chestRewardItem = { type: 'gold', html: `<span class="tag new">巨額財富</span><h2>💰 黑盒子陣列</h2><p>大量物資回收</p>` };
                     goldReward += 500;
                 }
@@ -719,16 +683,13 @@
             document.getElementById('chest-coins').innerText = goldReward;
             itemBox.innerHTML = chestRewardItem.html;
             
-            // 點擊寶箱後執行動畫
             box.onclick = () => {
                 box.className = 'chest-img opening';
-                // 震動 1.5 秒後打開
                 setTimeout(() => {
-                    box.innerText = '✨'; // 變成光芒
-                    spawnParticles(canvas.width/2, canvas.height/2, '#facc15', 300); // 背景放煙火
+                    box.innerText = '✨'; 
+                    spawnParticles(canvas.width/2, canvas.height/2, '#facc15', 300); 
                     rewardUi.style.display = 'block';
                     
-                    // 實際給予獎勵
                     collectedCoins += goldReward; document.getElementById('ingame-coin-display').innerText = collectedCoins;
                     if(chestRewardItem.type === 'evo') evolveWeapon(chestRewardItem.id);
                     else if(chestRewardItem.type === 'weapon') upgradeWeapon(chestRewardItem.id);
@@ -740,7 +701,6 @@
         
         function closeChest() { document.getElementById('chest-modal').classList.add('hidden'); gameState = 'playing'; }
 
-        // 🌟 嚴格限制的升級選單
         function triggerLevelUp() {
             gameState = 'level_up'; 
             const modal = document.getElementById('level-up-modal');
@@ -753,17 +713,14 @@
             const ownedWeapons = Object.keys(player.weapons); 
             const ownedPassives = Object.keys(player.passives);
 
-            // 只有在武器格沒滿時，才把「未擁有」的武器加入池子
             if (ownedWeapons.length < MAX_WEAPONS) { 
                 for (let w in WEAPON_DB) { if (!player.weapons[w]) pool.push({ type: 'new_weapon', id: w, name: WEAPON_DB[w].name, icon: WEAPON_DB[w].icon, desc: WEAPON_DB[w].desc[0], tag: '新武裝', class: 'new', action: () => acquireWeapon(w) }); } 
             }
-            // 已擁有且未滿級、未進化的武器加入池子
             for (let w in player.weapons) { 
                 const lvl = player.weapons[w].level; 
                 if (lvl < WEAPON_DB[w].maxLevel && !player.weapons[w].isEvolved) pool.push({ type: 'upgrade', id: w, name: `${WEAPON_DB[w].name} Lv.${lvl+1}`, icon: WEAPON_DB[w].icon, desc: WEAPON_DB[w].desc[lvl], tag: '強化', class: '', action: () => upgradeWeapon(w) }); 
             }
 
-            // 被動裝備同理
             if (ownedPassives.length < MAX_PASSIVES) { 
                 for (let p in PASSIVE_DB) { if (!player.passives[p]) pool.push({ type: 'new_passive', id: p, name: PASSIVE_DB[p].name, icon: PASSIVE_DB[p].icon, desc: PASSIVE_DB[p].desc, tag: '新裝備', class: 'passive', action: () => acquirePassive(p) }); } 
             }
@@ -772,19 +729,16 @@
                 if (lvl < PASSIVE_DB[p].maxLevel) pool.push({ type: 'upgrade_passive', id: p, name: `${PASSIVE_DB[p].name} Lv.${lvl+1}`, icon: PASSIVE_DB[p].icon, desc: PASSIVE_DB[p].desc, tag: '強化', class: 'passive', action: () => upgradePassive(p) }); 
             }
 
-            // 如果全部滿級，給予基本補給
             if (pool.length === 0) {
                 pool.push({ name: '醫療包', icon: '🍗', desc: '立刻恢復 50 點裝甲', tag: '物資', class: '', action: () => { player.hp = Math.min(player.maxHp, player.hp + 50); } });
                 pool.push({ name: '小金庫', icon: '💰', desc: '獲得 25 資料幣', tag: '物資', class: '', action: () => { collectedCoins += 25; document.getElementById('ingame-coin-display').innerText = collectedCoins; } });
             }
 
-            // 隨機選 3 個 (有 10% 機率是 4 個選項)
             let optionCount = Math.random() < 0.1 ? 4 : 3;
             const choices = pool.sort(() => 0.5 - Math.random()).slice(0, Math.min(optionCount, pool.length));
             
             choices.forEach(choice => {
                 const card = document.createElement('div'); card.className = `card ${choice.class==='new' ? 'chest' : ''}`; 
-                // VS 的排版：左邊大圖示，右邊標題與描述
                 card.innerHTML = `
                     <div class="card-icon">${choice.icon}</div>
                     <div class="card-content">
@@ -800,17 +754,16 @@
             if (player.exp >= player.maxExp) { 
                 player.exp -= player.maxExp; player.level++; 
                 
-                // VS 經典經驗曲線：1-20 級極快，之後變慢
                 if (player.level < 20) player.maxExp += 10;
                 else if (player.level < 40) player.maxExp += 13;
                 else player.maxExp += 16;
                 
+                player.maxHp += 2; player.hp = player.maxHp; 
                 document.getElementById('level-display').innerText = player.level; 
                 
                 spawnParticles(worldX, worldY, '#facc15', 50);
                 floatTexts.push({x: worldX, y: worldY - 40, text: "LEVEL UP!", life: 60, color: '#facc15'});
                 
-                // 升級秒殺範圍縮小，避免過度無敵
                 enemies.forEach(en => { if (Math.hypot(worldX - en.x, worldY - en.y) < 150 && !en.isBoss && en.type !== 'elite') { en.hp = 0; } });
 
                 triggerLevelUp(); 
@@ -819,42 +772,29 @@
         }
 
         function update() {
-            // 🌟 新增：死亡子彈時間邏輯
+            // 死亡子彈時間邏輯
             if (gameState === 'dying') {
                 deathTimer--;
-                
-                // 爆炸碎片維持正常速度
+                // 🌟 新增：衝擊波擴大與白光衰減
+                deathShockwaveRadius += 40; 
+                deathFlashAlpha *= 0.85;
+
                 for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx; particles[i].y += particles[i].vy; particles[i].life--; particles[i].vx *= 0.95; particles[i].vy *= 0.95; if (particles[i].life <= 0) particles.splice(i, 1); }
                 for (let i = floatTexts.length - 1; i >= 0; i--) { floatTexts[i].y -= 0.5; floatTexts[i].life--; if (floatTexts[i].life <= 0) floatTexts.splice(i, 1); }
-                
-                // 敵人進入極慢速漂移 (子彈時間)
-                enemies.forEach(en => {
-                    en.x += Math.cos(en.angle) * en.speed * 0.1;
-                    en.y += Math.sin(en.angle) * en.speed * 0.1;
-                });
-                
-                // 動畫結束，進入結算
+                // 🌟 讓敵人在死亡時幾乎定格
+                enemies.forEach(en => { en.x += Math.cos(en.angle) * en.speed * 0.02; en.y += Math.sin(en.angle) * en.speed * 0.02; });
                 if (deathTimer <= 0) gameOver();
-                return; // 死亡期間略過所有常規更新 (不再生怪、不開火、不扣秒數)
+                return; 
             }
 
             frameCount++;
-            
-            // 計時邏輯 (1秒 = 60幀)
             if (frameCount % 60 === 0) { 
                 gameSeconds++; 
                 document.getElementById('time-display').innerText = `${String(Math.floor(gameSeconds / 60)).padStart(2, '0')}:${String(gameSeconds % 60).padStart(2, '0')}`;
                 document.getElementById('earth-year').innerText = 2084 + gameSeconds;
-                
-                // 15分鐘死神機制 (900秒)
-                if (gameSeconds === 900 && !bossSpawned) {
-                    bossSpawned = true; warningTimer = 180;
-                    enemies = []; // 清空全場小怪
-                    spawnDeath();
-                }
+                if (gameSeconds === 900 && !bossSpawned) { bossSpawned = true; warningTimer = 180; enemies = []; spawnDeath(); }
             }
 
-            // 破壞物生成 (火把/儲存艙)
             if (frameCount % 180 === 0) spawnDestructible();
 
             if (player.dashCd > 0) {
@@ -863,13 +803,12 @@
                 else { dashBtn.innerText = Math.ceil(player.dashCd/60) + 's'; }
             }
             if (dashRequested && player.dashCd === 0) {
-                dashRequested = false; player.isDashing = true; player.dashTimer = 15; player.dashCd = 240; // 降低衝刺CD讓操作更順
+                dashRequested = false; player.isDashing = true; player.dashTimer = 15; player.dashCd = 240; 
                 dashBtn.classList.add('cooldown');
                 miniBlackHoles.push({ x: worldX, y: worldY, radius: 80, life: 120 });
                 screenShake = Math.min(screenShake + 8, 12); 
             }
 
-            // 依據地圖決定環境機制
             let pullX = 0, pullY = 0;
             if (STAGES[selectedStageIndex].id === 'gargantua') {
                 if (frameCount % 300 === 0) gravityZones.push({ x: worldX + (Math.random()-0.5)*1000, y: worldY + (Math.random()-0.5)*1000, radius: 200 + Math.random()*150, life: 900 });
@@ -878,7 +817,7 @@
                     let dist = Math.hypot(worldX - gz.x, worldY - gz.y);
                     if (dist < gz.radius) { 
                         const force = (1 - dist/gz.radius) * 3.0; 
-                        dist = Math.max(dist, 0.1); // 🌟 防當機：避免距離為 0 導致除以零 (NaN)
+                        dist = Math.max(dist, 0.1); 
                         pullX += ((gz.x - worldX)/dist) * force; 
                         pullY += ((gz.y - worldY)/dist) * force; 
                     }
@@ -889,14 +828,12 @@
             if (player.isDashing) { player.dashTimer--; if (player.dashTimer <= 0) player.isDashing = false; }
             else { worldX += pullX; worldY += pullY; } 
 
-            // 角色移動
             let dx = 0; let dy = 0;
             if (keys['ArrowUp'] || keys['KeyW']) dy -= 1; if (keys['ArrowDown'] || keys['KeyS']) dy += 1; if (keys['ArrowLeft'] || keys['KeyA']) dx -= 1; if (keys['ArrowRight'] || keys['KeyD']) dx += 1;
             if (dx !== 0 || dy !== 0) { const dist = Math.hypot(dx, dy); worldX += (dx / dist) * currentSpeed; worldY += (dy / dist) * currentSpeed; player.angle = Math.atan2(dy, dx); } 
             else if (isTouching && (touchVector.x !== 0 || touchVector.y !== 0)) { worldX += touchVector.x * currentSpeed; worldY += touchVector.y * currentSpeed; player.angle = Math.atan2(touchVector.y, touchVector.x); }
             else if (player.isDashing) { worldX += Math.cos(player.angle) * currentSpeed; worldY += Math.sin(player.angle) * currentSpeed; } 
 
-            // --- 武器開火邏輯 ---
             if (player.weapons.blaster) {
                 let w = player.weapons.blaster; w.timer++;
                 let cd = Math.max(2, Math.floor(w.baseCooldown * globalCdMult)); 
@@ -904,7 +841,7 @@
                     w.timer = 0; let fDmg = w.baseDamage * globalDmgMult; let fSpeed = w.baseSpeed * globalProjSpeedMult;
                     if (w.isEvolved) {
                         for(let i=0; i<w.count; i++) {
-                            let ang = player.angle + (i * Math.PI*2/w.count) + frameCount*0.1; // 旋轉發射
+                            let ang = player.angle + (i * Math.PI*2/w.count) + frameCount*0.1; 
                             bullets.push({ type: 'blaster', isEvo: true, x: worldX, y: worldY, vx: Math.cos(ang) * fSpeed, vy: Math.sin(ang) * fSpeed, life: 60, damage: fDmg });
                         }
                     } else {
@@ -966,18 +903,13 @@
                 for(let i=0; i < w.count; i++) { orbitals.push({ x: worldX + Math.cos(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius, y: worldY + Math.sin(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius }); } 
             }
 
-            // 🌟 波次管理器生怪 (15分鐘前)
             if (gameSeconds < 900) {
-                // 動態頻率：隨著時間推移，每幀產生怪物的機率增加
                 let spawnChance = 0.02 + (gameSeconds / 900) * 0.15;
                 if (Math.random() < spawnChance) spawnEnemy();
             }
 
-            // 清理與更新投射物
             for (let i = bullets.length - 1; i >= 0; i--) { 
                 bullets[i].x += bullets[i].vx; bullets[i].y += bullets[i].vy; bullets[i].life--; 
-                
-                // 炸彈到期爆炸
                 if (bullets[i].type === 'bomb' && bullets[i].life <= 0) {
                     spawnParticles(bullets[i].x, bullets[i].y, bullets[i].isEvo ? '#22c55e' : '#f43f5e', bullets[i].isEvo ? 80 : 30);
                     if(bullets[i].isEvo) screenShake = Math.min(screenShake + 15, 25);
@@ -988,18 +920,16 @@
                     });
                     bullets.splice(i, 1); continue;
                 }
-                
                 if (bullets[i].life <= 0) bullets.splice(i, 1); 
             }
             
             for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx; particles[i].y += particles[i].vy; particles[i].life--; particles[i].vx *= 0.92; particles[i].vy *= 0.92; if (particles[i].life <= 0) particles.splice(i, 1); }
             for (let i = miniBlackHoles.length - 1; i >= 0; i--) { miniBlackHoles[i].life--; if(miniBlackHoles[i].life <= 0) miniBlackHoles.splice(i, 1); }
 
-            // 破壞物被擊中
             for (let i = destructibles.length - 1; i >= 0; i--) {
                 let d = destructibles[i]; let isHit = false;
                 for (let j = bullets.length - 1; j >= 0; j--) {
-                    if (bullets[j].type === 'bomb') continue; // 炸彈不直接撞碎箱子，靠爆炸
+                    if (bullets[j].type === 'bomb') continue; 
                     if (Math.hypot(bullets[j].x - d.x, bullets[j].y - d.y) < d.size + 15) { isHit = true; if(!bullets[j].isEvo && bullets[j].type !== 'laser_evo') bullets.splice(j, 1); break; }
                 }
                 if (!isHit && player.weapons.drone) { orbitals.forEach(orb => { if (Math.hypot(orb.x - d.x, orb.y - d.y) < d.size + 15) isHit = true; }); }
@@ -1008,10 +938,10 @@
                 if (isHit) {
                     spawnParticles(d.x, d.y, '#38bdf8', 15);
                     const rand = Math.random();
-                    if (rand < 0.2) consumables.push({ type: 'heal', x: d.x, y: d.y }); // 烤雞 20%
-                    else if (rand < 0.3) consumables.push({ type: 'bomb', x: d.x, y: d.y }); // 炸彈 10%
-                    else if (rand < 0.4) consumables.push({ type: 'magnet', x: d.x, y: d.y }); // 磁鐵 10%
-                    else coinsArr.push({ x: d.x, y: d.y, value: 10 }); // 金幣 60%
+                    if (rand < 0.2) consumables.push({ type: 'heal', x: d.x, y: d.y }); 
+                    else if (rand < 0.3) consumables.push({ type: 'bomb', x: d.x, y: d.y }); 
+                    else if (rand < 0.4) consumables.push({ type: 'magnet', x: d.x, y: d.y }); 
+                    else coinsArr.push({ x: d.x, y: d.y, value: 10 }); 
                     destructibles.splice(i, 1);
                 }
             }
@@ -1024,7 +954,7 @@
                     let dist = Math.hypot(en.x - gz.x, en.y - gz.y); 
                     if (dist < gz.radius) { 
                         const force = (1 - dist/gz.radius) * 4.0; 
-                        dist = Math.max(dist, 0.1); // 🌟 防當機
+                        dist = Math.max(dist, 0.1); 
                         enPullX += ((gz.x - en.x)/dist) * force; 
                         enPullY += ((gz.y - en.y)/dist) * force; 
                     } 
@@ -1032,7 +962,7 @@
                 miniBlackHoles.forEach(mbh => { 
                     let dist = Math.hypot(en.x - mbh.x, en.y - mbh.y); 
                     if (dist < mbh.radius) { 
-                        dist = Math.max(dist, 0.1); // 🌟 防當機
+                        dist = Math.max(dist, 0.1); 
                         enPullX += ((mbh.x - en.x)/dist) * 6; 
                         enPullY += ((mbh.y - en.y)/dist) * 6; 
                         if(frameCount % 10 === 0) { en.hp -= 5; floatTexts.push({x: en.x, y: en.y, text: "5", life: 10, color: '#a78bfa'}); } 
@@ -1046,18 +976,16 @@
                 en.knockbackX *= 0.85; en.knockbackY *= 0.85;
                 if (en.damageFlash > 0) en.damageFlash--;
 
-                // 玩家受傷判定
                 if (player.isDashing) {
                     if (!en.isBoss && en.type !== 'death' && Math.hypot(worldX - en.x, worldY - en.y) < player.size + en.size + 15) { en.hp = 0; spawnParticles(en.x, en.y, '#a78bfa', 5); }
                 } else if (player.invincibleTimer <= 0 && Math.hypot(worldX - en.x, worldY - en.y) < player.size + en.size - 5) {
                     let dmg = 10; 
                     if (en.type === 'splitter') dmg = 15; 
                     if (en.type === 'elite') dmg = 30; 
-                    if (en.type === 'death') dmg = 9999; // 死神秒殺
+                    if (en.type === 'death') dmg = 9999; 
                     damageTakenThisFrame = Math.max(damageTakenThisFrame, dmg);
                 }
 
-                // 持續性武器判定 (Aura)
                 if (player.weapons.aura) {
                     let w = player.weapons.aura; let fRadius = w.baseRadius * globalAreaMult;
                     if (Math.hypot(en.x - worldX, en.y - worldY) < fRadius + en.size) { 
@@ -1069,16 +997,14 @@
                     }
                 }
 
-                // 投射物碰撞
                 for (let j = bullets.length - 1; j >= 0; j--) {
-                    if(bullets[j].type === 'bomb') continue; // 炸彈靠壽命結束引爆
+                    if(bullets[j].type === 'bomb') continue; 
                     let hitRadius = bullets[j].type === 'laser_evo' ? bullets[j].aoe : (bullets[j].type === 'plasma' && bullets[j].isEvo ? bullets[j].aoe : 15);
                     
                     if (Math.hypot(bullets[j].x - en.x, bullets[j].y - en.y) < en.size + hitRadius) {
                         let bulletAngle = Math.atan2(bullets[j].vy, bullets[j].vx);
                         if (bullets[j].type === 'plasma') {
                             if (!bullets[j].isEvo) { 
-                                // 🌟 效能優化：未進化的電漿彈爆炸後即銷毀
                                 spawnParticles(bullets[j].x, bullets[j].y, '#d946ef', 15); 
                                 let aoeRadius = bullets[j].aoe;
                                 enemies.forEach(e2 => {
@@ -1093,7 +1019,6 @@
                                 });
                                 bullets.splice(j, 1); 
                             } else {
-                                // 🌟 效能優化：進化的超新星只針對碰到的敵人造成持續傷害，避免 N 平方級迴圈爆炸導致後期卡死
                                 if (frameCount % 10 === 0) {
                                     spawnParticles(en.x, en.y, '#d946ef', 2);
                                     en.hp -= bullets[j].damage;
@@ -1136,12 +1061,10 @@
                     }); 
                 }
 
-                // 怪物死亡處理
                 if (en.hp <= 0 && en.type !== 'death') {
                     spawnParticles(en.x, en.y, '#ef4444', 8); spawnParticles(en.x, en.y, '#64748b', 4);
                     
                     if (en.type === 'elite') {
-                        // 🌟 精英必定掉寶箱
                         consumables.push({ type: 'chest', x: en.x, y: en.y });
                         screenShake = Math.min(screenShake + 8, 15);
                     } else if (en.type === 'splitter') {
@@ -1153,9 +1076,8 @@
                         }
                         gems.push({ x: en.x, y: en.y, value: 3 });
                     } else {
-                        // 一般小怪機率掉寶石或錢
                         if (Math.random() < 0.02) coinsArr.push({ x: en.x, y: en.y, value: 1 }); 
-                        else if (Math.random() < 0.4) gems.push({ x: en.x, y: en.y, value: 1 }); // 降低滿地寶石的效能壓力
+                        else if (Math.random() < 0.4) gems.push({ x: en.x, y: en.y, value: 1 }); 
                     }
                     enemies.splice(i, 1); score++; document.getElementById('score-display').innerText = score;
                 }
@@ -1165,27 +1087,32 @@
             if (damageTakenThisFrame > 0) { 
                 player.hp -= damageTakenThisFrame; player.damageFlash = 10; player.invincibleTimer = 60; 
                 screenShake = Math.min(screenShake + 10, 20); 
-                document.getElementById('hp-fill').style.width = Math.max(0, (player.hp / player.maxHp) * 100) + '%'; 
                 
-                // 🌟 新增：觸發死亡分鏡
                 if (player.hp <= 0 && gameState === 'playing') { 
                     gameState = 'dying';
-                    deathTimer = 150; // 2.5秒的緩慢爆炸動畫
-                    screenShake = 60; // 終極螢幕震動
-                    document.getElementById('game-ui').classList.add('hidden'); // 瞬間隱藏UI增加電影感
+                    // 🌟 縮短等待時間 (90幀 = 1.5秒)，加大震動，重置特效
+                    deathTimer = 90; 
+                    screenShake = 80; 
+                    deathShockwaveRadius = 1;
+                    deathFlashAlpha = 1.0;
+                    document.getElementById('game-ui').classList.add('hidden'); 
                     
-                    // 華麗的解體爆炸特效
-                    spawnParticles(worldX, worldY, '#38bdf8', 150); // 裝甲碎片
-                    spawnParticles(worldX, worldY, '#facc15', 100); // 爆炸火花
-                    spawnParticles(worldX, worldY, '#ef4444', 100); // 核心高溫
-                    spawnParticles(worldX, worldY, '#ffffff', 50);  // 閃光
+                    spawnParticles(worldX, worldY, '#38bdf8', 150); 
+                    spawnParticles(worldX, worldY, '#facc15', 100); 
+                    spawnParticles(worldX, worldY, '#ef4444', 100); 
+                    
+                    // 🌟 追加極速散射的爆炸碎片
+                    for(let i=0; i<80; i++) {
+                        const angle = Math.random() * Math.PI * 2, speed = Math.random() * 20 + 10;
+                        particles.push({ x: worldX, y: worldY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 15 + Math.random() * 10, maxLife: 25, color: '#ffffff', size: Math.random() * 5 + 2 });
+                    }
+                    
                     floatTexts.push({x: worldX, y: worldY - 20, text: "機體摧毀！", life: 100, color: '#f87171'});
                     return; 
                 } 
             }
             if (player.damageFlash > 0) player.damageFlash--;
 
-            // 道具吸取
             for (let i = gems.length - 1; i >= 0; i--) { const dist = Math.hypot(worldX - gems[i].x, worldY - gems[i].y); if (dist < player.pickupRadius) { gems[i].x += Math.cos(Math.atan2(worldY - gems[i].y, worldX - gems[i].x)) * 15; gems[i].y += Math.sin(Math.atan2(worldY - gems[i].y, worldX - gems[i].x)) * 15; if (dist < player.size + 10) { player.exp += gems[i].value; gems.splice(i, 1); checkLevelUp(); } } }
             for (let i = coinsArr.length - 1; i >= 0; i--) { const dist = Math.hypot(worldX - coinsArr[i].x, worldY - coinsArr[i].y); if (dist < player.pickupRadius) { coinsArr[i].x += Math.cos(Math.atan2(worldY - coinsArr[i].y, worldX - coinsArr[i].x)) * 18; coinsArr[i].y += Math.sin(Math.atan2(worldY - coinsArr[i].y, worldX - coinsArr[i].x)) * 18; if (dist < player.size + 15) { collectedCoins += coinsArr[i].value; document.getElementById('ingame-coin-display').innerText = collectedCoins; coinsArr.splice(i, 1); } } }
             
@@ -1223,16 +1150,13 @@
             ctx.save();
             if (screenShake > 0) { const shakeX = (Math.random() - 0.5) * screenShake; const shakeY = (Math.random() - 0.5) * screenShake; ctx.translate(shakeX, shakeY); screenShake *= 0.9; if (screenShake < 0.5) screenShake = 0; }
 
-            // 確保死亡動畫期間視角也正確追蹤
             let drawWorldX = gameState === 'playing' || gameState === 'paused' || gameState === 'level_up' || gameState === 'chest' || gameState === 'dying' ? worldX : frameCount * 0.5; 
             let drawWorldY = gameState === 'playing' || gameState === 'paused' || gameState === 'level_up' || gameState === 'chest' || gameState === 'dying' ? worldY : frameCount * 0.2;
 
-            // 繪製星空背景
             ctx.globalCompositeOperation = 'lighter';
             nebulas.forEach(nebula => { let nx = (nebula.x - drawWorldX * nebula.depth) % 4000; let ny = (nebula.y - drawWorldY * nebula.depth) % 4000; if (nx < -1000) nx += 4000; if (ny < -1000) ny += 4000; const grad = ctx.createRadialGradient(nx, ny, 0, nx, ny, nebula.radius); grad.addColorStop(0, `hsla(${bgHue}, 80%, 50%, 0.08)`); grad.addColorStop(1, `hsla(${bgHue}, 80%, 50%, 0)`); ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(nx, ny, nebula.radius, 0, Math.PI * 2); ctx.fill(); });
             ctx.globalCompositeOperation = 'source-over';
             
-            // 🌟 行星動態效果更新：加入獨立漂移與自轉
             planets.forEach(planet => { 
                 let driftX = planet.x + frameCount * planet.vx;
                 let driftY = planet.y + frameCount * planet.vy;
@@ -1241,14 +1165,12 @@
                 let px = (driftX - drawWorldX * planet.depth) % 5000; 
                 let py = (driftY - drawWorldY * planet.depth) % 5000; 
                 
-                // 加大緩衝區，避免巨大行星在畫面邊緣突然消失或閃爍
                 if (px < -1500) px += 5000; else if (px > 3500) px -= 5000;
                 if (py < -1500) py += 5000; else if (py > 3500) py -= 5000;
                 
                 ctx.save(); 
                 ctx.translate(px, py); 
                 
-                // 加入微弱大氣層發光效果
                 ctx.shadowBlur = 40;
                 ctx.shadowColor = planet.color;
 
@@ -1262,7 +1184,7 @@
                 pGrad.addColorStop(0, planet.color); pGrad.addColorStop(1, '#020617'); 
                 ctx.fillStyle = pGrad; ctx.beginPath(); ctx.arc(0, 0, planet.radius, 0, Math.PI * 2); ctx.fill(); 
                 
-                ctx.shadowBlur = 0; // 關閉發光避免影響前景星環
+                ctx.shadowBlur = 0; 
                 
                 if (planet.hasRing) { 
                     ctx.beginPath(); ctx.ellipse(0, 0, planet.radius * 2.2, planet.radius * 0.4, 0, Math.PI, Math.PI*2); 
@@ -1292,7 +1214,6 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             stars.forEach(star => { let sx = (star.x - drawWorldX * star.depth) % canvas.width; let sy = (star.y - drawWorldY * star.depth) % canvas.height; if (sx < 0) sx += canvas.width; if (sy < 0) sy += canvas.height; ctx.beginPath(); ctx.arc(sx, sy, star.size, 0, Math.PI * 2); ctx.fill(); });
 
-            // 包含 dying 狀態也繪製場景
             if (gameState === 'playing' || gameState === 'paused' || gameState === 'gameover' || gameState === 'level_up' || gameState === 'chest' || gameState === 'dying') {
                 
                 ctx.shadowBlur = 15; ctx.shadowColor = '#0ea5e9'; ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
@@ -1369,7 +1290,6 @@
                     ctx.shadowBlur = 0; 
                 }
 
-                // 🌟 新增：只有在非死亡狀態才繪製機甲與吸取範圍
                 if (gameState !== 'dying') {
                     ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(player.angle); 
                     if (player.invincibleTimer > 0 && Math.floor(frameCount / 5) % 2 === 0) ctx.globalAlpha = 0.5;
@@ -1389,42 +1309,62 @@
             }
             ctx.restore();
 
-            // 🌟 死亡血紅全畫面淡入與科幻雜訊特效
             if (gameState === 'dying') {
-                const fadeAlpha = Math.min(0.7, (150 - deathTimer) / 150);
+                // 🌟 新增：繪製爆炸衝擊波與全螢幕閃白
+                ctx.save(); 
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                
+                // 衝擊波光環
+                ctx.beginPath(); 
+                ctx.arc(0, 0, deathShockwaveRadius, 0, Math.PI * 2); 
+                ctx.lineWidth = Math.max(1, 40 - deathShockwaveRadius / 25); 
+                ctx.strokeStyle = `rgba(255, 255, 255, ${Math.max(0, 1 - deathShockwaveRadius / 1500)})`; 
+                ctx.stroke();
+
+                // 衝擊波內核紅光
+                ctx.beginPath(); 
+                ctx.arc(0, 0, deathShockwaveRadius * 0.8, 0, Math.PI * 2); 
+                ctx.fillStyle = `rgba(239, 68, 68, ${Math.max(0, 0.4 - deathShockwaveRadius / 1200)})`; 
+                ctx.fill();
+                ctx.restore();
+
+                // 瞬間致盲白光
+                if (deathFlashAlpha > 0.01) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${deathFlashAlpha})`;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+
+                // 調整過後的血紅疊加層 (配合縮短的 90 幀)
+                const fadeAlpha = Math.min(0.7, (90 - deathTimer) / 90);
                 ctx.fillStyle = `rgba(159, 18, 57, ${fadeAlpha})`; 
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // 📺 創意追加：科幻風「訊號中斷 (Glitch)」雜訊橫條
-                if (deathTimer < 130 && Math.random() < 0.4) {
+                if (deathTimer < 70 && Math.random() < 0.4) {
                     ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.15})`;
                     ctx.fillRect(0, Math.random() * canvas.height, canvas.width, Math.random() * 15 + 2);
                     ctx.fillStyle = `rgba(56, 189, 248, ${Math.random() * 0.2})`;
                     ctx.fillRect(0, Math.random() * canvas.height, canvas.width, Math.random() * 30 + 5);
                 }
 
-                const textAlpha = Math.min(1, (150 - deathTimer) / 100);
+                const textAlpha = Math.min(1, (90 - deathTimer) / 40);
                 ctx.font = '900 48px monospace';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
-                // 📺 創意追加：文字的 RGB 色偏分離 (Chromatic Aberration) 與抽動
                 let glitchX = 0;
-                if (deathTimer < 100 && Math.random() < 0.3) glitchX = (Math.random() - 0.5) * 15;
+                if (deathTimer < 60 && Math.random() < 0.3) glitchX = (Math.random() - 0.5) * 15;
                 
-                ctx.fillStyle = `rgba(56, 189, 248, ${textAlpha * 0.7})`; // 藍色殘影
+                ctx.fillStyle = `rgba(56, 189, 248, ${textAlpha * 0.7})`; 
                 ctx.fillText("CRITICAL DAMAGE", canvas.width/2 + glitchX - 4, canvas.height/2 - 50);
-                ctx.fillStyle = `rgba(244, 63, 94, ${textAlpha * 0.7})`; // 紅色殘影
+                ctx.fillStyle = `rgba(244, 63, 94, ${textAlpha * 0.7})`; 
                 ctx.fillText("CRITICAL DAMAGE", canvas.width/2 + glitchX + 4, canvas.height/2 - 50);
                 
-                // 主文字
                 ctx.fillStyle = `rgba(255, 255, 255, ${textAlpha})`;
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = '#e11d48';
                 ctx.fillText("CRITICAL DAMAGE", canvas.width/2 + glitchX, canvas.height/2 - 50);
                 ctx.shadowBlur = 0;
                 
-                // 斷線提示字樣
                 ctx.font = 'bold 20px monospace';
                 ctx.fillStyle = `rgba(148, 163, 184, ${textAlpha})`;
                 ctx.fillText(">> CONNECTION LOST <<", canvas.width/2 + glitchX, canvas.height/2);
