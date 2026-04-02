@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>星際倖存者：輓救行動 (終極割草版)</title>
+    <title>星際倖存者：輓救行動 (極限 5 分鐘版)</title>
     <style>
         * { -webkit-touch-callout: none; }
         body { margin: 0; padding: 0; background: #020205; overflow: hidden; color: #e0f2fe; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; overscroll-behavior: none; user-select: none; -webkit-user-select: none; width: 100vw; height: 100dvh; }
@@ -67,11 +67,15 @@
         .menu-list { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 300px; margin: 0 auto; }
         .menu-list button { width: 100%; padding: 15px; font-size: 20px; }
 
+        /* 選角與關卡 */
         .select-layout { display: flex; flex-direction: row; gap: 20px; height: 45vh; min-height: 250px; }
         .side-panel { width: 250px; background: #1e293b; padding: 15px; border-radius: 8px; border: 1px solid #475569; overflow-y: auto; font-size: 14px; text-align: left; }
-        .main-panel { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; align-content: start; overflow-y: auto; padding-right: 5px; }
         
-        .char-slot { background: #0f172a; border: 2px solid #334155; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; transition: 0.2s; }
+        /* 🌟 改為橫向 Grid 佈局 */
+        .main-panel { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; align-content: start; overflow-y: auto; padding-right: 5px; }
+        .main-panel.horizontal-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-content: start; }
+        
+        .char-slot { background: #0f172a; border: 2px solid #334155; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 38px; cursor: pointer; transition: 0.2s; }
         .char-slot:hover { border-color: #94a3b8; transform: scale(1.05); }
         .char-slot.selected { border-color: #facc15; box-shadow: 0 0 15px rgba(250,204,21,0.5); background: #1e293b; }
         
@@ -85,6 +89,7 @@
         .stat-row span:last-child { color: #38bdf8; font-weight: bold; }
         .start-weapon-badge { font-size: 12px; background: #334155; padding: 3px 8px; border-radius: 4px; color: #e2e8f0; display: inline-block; margin-top:5px;}
 
+        /* 升級選單 */
         .upgrade-cards { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; align-items: center; }
         .card { background: #1e293b; border: 2px solid #334155; border-radius: 8px; padding: 15px; width: 100%; max-width: 450px; cursor: pointer; transition: all 0.1s; text-align: left; display: flex; align-items: center; gap: 15px; box-sizing: border-box; }
         .card:hover { border-color: #38bdf8; background: #0ea5e9; color: #0f172a; transform: translateX(5px); }
@@ -187,7 +192,7 @@
             CREATED BY 林小木
         </div>
         <div style="position: absolute; bottom: env(safe-area-inset-bottom, 20px); font-size: 12px; color: #475569; letter-spacing: 2px;">
-            VER 2.0.0 | LEVIATHAN
+            VER 2.1.0 | 5-MINUTES APOCALYPSE
         </div>
     </div>
 
@@ -204,7 +209,7 @@
 
     <div id="char-select-menu" class="modal hidden">
         <div class="menu-box">
-            <h1 class="sys-title">角色選擇</h1>
+            <h1 class="sys-title">選擇駕駛員</h1>
             <div class="select-layout">
                 <div class="side-panel" id="char-stats"></div>
                 <div class="main-panel" id="char-grid"></div>
@@ -223,10 +228,12 @@
 
     <div id="stage-select-menu" class="modal hidden">
         <div class="menu-box">
-            <h1 class="sys-title">關卡選擇</h1>
+            <h1 class="sys-title">星域選擇</h1>
             <div class="select-layout">
-                <div class="main-panel list" id="stage-list"></div>
-                <div class="side-panel" id="stage-details"></div>
+                <!-- 🌟 改為橫向 Grid 排列 -->
+                <div class="main-panel horizontal-list" id="stage-list"></div>
+            </div>
+            <div style="background: #1e293b; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #475569; text-align: left;" id="stage-details">
             </div>
             <div style="display:flex; justify-content: space-between; margin-top: 15px;">
                 <button class="btn danger" onclick="goToCharSelect()">返回</button>
@@ -318,8 +325,8 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        let saveData = JSON.parse(localStorage.getItem('spaceSurvivorsSave_v20')) || { coins: 0, upgrades: { hp: 0, speed: 0, damage: 0, magnet: 0 } };
-        function saveGame() { localStorage.setItem('spaceSurvivorsSave_v20', JSON.stringify(saveData)); updateMenuCoins(); }
+        let saveData = JSON.parse(localStorage.getItem('spaceSurvivorsSave_v21')) || { coins: 0, upgrades: { hp: 0, speed: 0, damage: 0, magnet: 0 } };
+        function saveGame() { localStorage.setItem('spaceSurvivorsSave_v21', JSON.stringify(saveData)); updateMenuCoins(); }
 
         let gameState = 'title';
         let worldX = 0, worldY = 0, score = 0, frameCount = 0, gameSeconds = 0, collectedCoins = 0;
@@ -339,7 +346,6 @@
         const MAX_WEAPONS = 6;
         const MAX_PASSIVES = 6;
 
-        // 🌟 武器再次全面弱化 (AOE極限縮小)，並加入新武器
         const WEAPON_DB = {
             blaster: { name: '前鋒機砲', icon: '🔫', maxLevel: 8, evoReq: 'cooldown', evoName: '裂空者', evoIcon: '🌠', desc: ['朝面朝方向發射彈道', '額外發射1個', '傷害提高', '額外發射1個', '傷害提高', '投射物速度加快', '可穿透敵人', '冷卻大幅縮短'] },
             laser: { name: '脈衝雷射', icon: '⚡', maxLevel: 8, evoReq: 'damage', evoName: '天罰陣列', evoIcon: '🛰️', desc: ['鎖定最近的敵人', '傷害提高', '冷卻縮短', '傷害提高', '速度加快', '冷卻縮短', '傷害提高', '高速機關槍'] },
@@ -347,7 +353,6 @@
             plasma: { name: '電漿爆破', icon: '🔮', maxLevel: 8, evoReq: 'area', evoName: '超新星', evoIcon: '🌌', desc: ['發射爆炸球', '範圍擴大', '額外發射1個', '傷害提高', '冷卻縮短', '額外發射1個', '範圍擴大', '進化牽引黑洞'] },
             aura: { name: '輻射力場', icon: '🌀', maxLevel: 8, evoReq: 'magnet', evoName: '絕對領域', evoIcon: '💠', desc: ['對身邊敵人造成傷害', '範圍擴大', '傷害頻率加快', '傷害提高', '範圍擴大', '傷害頻率加快', '傷害提高', '近身絞肉機'] },
             bomb: { name: '櫻桃炸彈', icon: '🍒', maxLevel: 8, evoReq: 'hp', evoName: '核聚變彈', evoIcon: '☢️', desc: ['投擲炸彈', '爆炸範圍擴大', '冷卻縮短', '額外投擲1個', '傷害提高', '爆炸範圍擴大', '額外投擲1個', '引發小型核爆'] },
-            // 🌟 新武器：光束斬艦刀 (向前方近距離揮砍) & 定時機雷
             blade: { name: '光束斬艦刀', icon: '🗡️', maxLevel: 8, evoReq: 'regen', evoName: '等離子光劍', evoIcon: '⚔️', desc: ['向前方揮出光刃', '傷害提高', '範圍擴大', '冷卻縮短', '傷害提高', '範圍擴大', '冷卻縮短', '進化為巨型光劍'] },
             mine: { name: '定時機雷', icon: '💣', maxLevel: 8, evoReq: 'duration', evoName: '反物質地雷', evoIcon: '💥', desc: ['在原地放置機雷', '傷害提高', '額外放置1個', '爆炸範圍擴大', '傷害提高', '冷卻縮短', '爆炸範圍擴大', '引發連鎖毀滅'] }
         };
@@ -359,22 +364,21 @@
             area: { name: '廣域雷達', icon: '📡', maxLevel: 5, desc: '效果範圍擴大 10%。' },
             magnet: { name: '牽引網', icon: '🧲', maxLevel: 5, desc: '拾取範圍擴大 25%。' },
             hp: { name: '裝甲塗層', icon: '🛡️', maxLevel: 5, desc: '最大生命值提高 20%。' },
-            // 🌟 新被動：回血 & 持續時間
             regen: { name: '奈米修復', icon: '🩹', maxLevel: 5, desc: '每 5 秒恢復 1 點生命。' },
             duration: { name: '持久電池', icon: '🔋', maxLevel: 5, desc: '武器持續時間延長 15%。' }
         };
 
-        // 🌟 新增 2 名角色，共 5 名
+        // 🌟 角色改為人物/生物駕駛員，並賦予種族天賦
         const CHARACTERS = [
-            { id: 'ranger', name: '漫遊者', icon: '🚀', hp: 100, speed: 4.0, damage: 1.0, weapon: 'blaster', desc: '標準戰機。每升 10 級提升 10% 傷害。' },
-            { id: 'heavy', name: '守衛者', icon: '🛡️', hp: 180, speed: 3.0, damage: 0.8, weapon: 'drone', desc: '重型裝甲。高血量低速度。' },
-            { id: 'scout', name: '疾風先鋒', icon: '⚡', hp: 70, speed: 5.5, damage: 0.9, weapon: 'laser', desc: '輕型飛翼。極高機動性。' },
-            { id: 'engineer', name: '工程師', icon: '⚙️', hp: 120, speed: 3.8, damage: 1.0, weapon: 'mine', desc: '維修圓盤。武器持續時間天生增加 20%。' },
-            { id: 'ghost', name: '夜魅', icon: '🌙', hp: 80, speed: 4.8, damage: 1.2, weapon: 'blade', desc: '新月隱形機。基礎傷害較高。' }
+            { id: 'ranger', name: '安東尼奧 (人類游俠)', icon: '🧑‍🚀', hp: 100, speed: 4.0, damage: 1.0, weapon: 'blaster', desc: '駕駛標準戰機。每升 10 級提升 10% 傷害。' },
+            { id: 'heavy', name: '格羅克 (突變獸人)', icon: '🦍', hp: 180, speed: 3.0, damage: 0.8, weapon: 'drone', desc: '駕駛重裝坦克。高血量低速度。' },
+            { id: 'scout', name: '艾莉亞 (虛空精靈)', icon: '🧝‍♀️', hp: 70, speed: 5.5, damage: 0.9, weapon: 'laser', desc: '駕駛輕型飛翼。擁有極高機動性。' },
+            { id: 'engineer', name: 'C-137 (智械工匠)', icon: '🤖', hp: 120, speed: 3.8, damage: 1.0, weapon: 'mine', desc: '駕駛維修圓盤。武器持續時間天生增加 20%。' },
+            { id: 'ghost', name: '澤拉圖 (高階外星客)', icon: '👽', hp: 80, speed: 4.8, damage: 1.2, weapon: 'blade', desc: '駕駛新月隱形機。基礎傷害較高。' }
         ];
 
         const STAGES = [
-            { id: 'gargantua', name: '卡岡都亞星際', desc: '純粹的深空戰場。<br><b>難度：★☆☆</b>', locked: false, bgHue: 280 },
+            { id: 'gargantua', name: '卡岡都亞星域', desc: '純粹的深空戰場。<br><b>難度：★☆☆</b>', locked: false, bgHue: 280 },
             { id: 'dyson', name: '廢棄戴森球', desc: '金屬迷宮。<br><b>難度：★★☆</b> (開發中)', locked: true, bgHue: 200 }
         ];
 
@@ -410,11 +414,12 @@
             const char = CHARACTERS[selectedCharIndex];
             document.getElementById('char-name').innerHTML = `${char.name}`;
             document.getElementById('char-weapon').innerText = `初始武裝: ${WEAPON_DB[char.weapon].name}`;
-            document.getElementById('char-desc').innerText = char.desc;
+            document.getElementById('char-desc').innerHTML = `<b>駕駛機種：</b>${char.desc}`;
             
             const hpBonus = (saveData.upgrades.hp || 0) * 10; const speedBonus = (saveData.upgrades.speed || 0) * 5;
             const dmgBonus = (saveData.upgrades.damage || 0) * 5; const magBonus = (saveData.upgrades.magnet || 0) * 10;
             document.getElementById('char-stats').innerHTML = `
+                <div style="color:#facc15; margin-bottom:10px; font-weight:bold; border-bottom:1px solid #475569; padding-bottom:5px;">駕駛員能力</div>
                 <div class="stat-row"><span>最大生命</span><span>${char.hp} <span style="color:#4ade80">+${hpBonus}</span></span></div>
                 <div class="stat-row"><span>移動速度</span><span>${char.speed.toFixed(1)} <span style="color:#4ade80">+${speedBonus}%</span></span></div>
                 <div class="stat-row"><span>力量</span><span>+${Math.round((char.damage-1)*100)}% <span style="color:#4ade80">+${dmgBonus}%</span></span></div>
@@ -493,7 +498,6 @@
             updateRow('weapon-row', 'passive-row'); updateRow('pause-weapon-row', 'pause-passive-row');
         }
 
-        // 🌟 武器再次全面弱化 (AOE極限縮小)，加入新武器
         function acquireWeapon(id) {
             if(id === 'blaster') player.weapons.blaster = { level: 1, baseDamage: 8, baseCooldown: 45, baseSpeed: 12, count: 1, timer: 0, isEvolved: false };
             if(id === 'laser') player.weapons.laser = { level: 1, baseDamage: 6, baseCooldown: 50, baseSpeed: 15, timer: 0, isEvolved: false };
@@ -521,7 +525,6 @@
 
         function evolveWeapon(id) {
             let w = player.weapons[id]; w.isEvolved = true;
-            // 進化武器不再清屏，範圍限縮在戰機周圍
             if(id === 'blaster') { w.count = 5; w.baseCooldown = 15; w.baseDamage *= 1.2; w.baseSpeed = 20; } 
             if(id === 'laser') { w.baseCooldown = 20; w.baseDamage *= 1.5; w.baseAoe = 50; } 
             if(id === 'drone') { w.count = 8; w.baseSpeed = 0.15; w.baseRadius = 80; w.baseDamage *= 1.5; } 
@@ -608,15 +611,16 @@
 
         function getScreenPos(wx, wy) { return { x: wx - worldX + canvas.width / 2, y: wy - worldY + canvas.height / 2 }; }
 
-        // 🌟 終極肉牆波次：極速生成、指數血量，緊貼螢幕邊緣
+        // 🌟 終極壓縮 5 分鐘波次：難度爬升極快
         function spawnEnemyBatch() {
-            if (enemies.length > 800 || bossSpawned) return; // 容許高達 800 隻
+            if (enemies.length > 800 || bossSpawned) return; 
 
-            let waveMin = Math.floor(gameSeconds / 60);
+            // 🌟 核心改動：將 10 分鐘難度壓縮進 5 分鐘，每 30 秒等於原本的 1 分鐘！
+            let waveMin = Math.floor(gameSeconds / 30);
             let hpScale = 1 + waveMin * 0.8 + Math.pow(waveMin, 2) * 0.4; 
             
             let count = 5 + Math.floor(gameSeconds / 10); 
-            let isSwarm = (gameSeconds % 120 >= 105); 
+            let isSwarm = (gameSeconds % 60 >= 45); // 每分鐘的最後 15 秒大爆發
             if (isSwarm) count *= 2; 
 
             let spawnRadiusX = canvas.width / 2 + 20; 
@@ -626,23 +630,21 @@
                 let type = 'minion';
                 if (waveMin >= 1 && Math.random() < 0.15) type = 'splitter';
                 if (waveMin >= 3 && Math.random() < 0.2 + (waveMin * 0.03)) type = 'tank'; 
-                // 新菁英怪：衝鋒者
                 if (waveMin >= 4 && Math.random() < 0.1) type = 'charger';
-                if (gameSeconds > 0 && gameSeconds % 60 === 0 && i === 0) type = 'elite';
+                if (gameSeconds > 0 && gameSeconds % 30 === 0 && i === 0) type = 'elite';
 
                 let size, speed, hpCalc, color, vCount, kbResist;
                 let speedScale = 1 + waveMin * 0.05;
                 
-                if (type === 'elite') { size = 35 + Math.random()*10; speed = 0.8 * speedScale; hpCalc = 300 * hpScale; color = '#9f1239'; vCount = 4; kbResist = 0.05; }
-                else if (type === 'tank') { size = 25 + Math.random()*5; speed = 0.5 * speedScale; hpCalc = 150 * hpScale; color = '#4c1d95'; vCount = 6; kbResist = 0.1; } 
+                if (type === 'elite') { size = 35 + Math.random()*10; speed = 0.9 * speedScale; hpCalc = 250 * hpScale; color = '#9f1239'; vCount = 4; kbResist = 0.1; }
+                else if (type === 'tank') { size = 25 + Math.random()*5; speed = 0.6 * speedScale; hpCalc = 100 * hpScale; color = '#4c1d95'; vCount = 6; kbResist = 0.15; } 
                 else if (type === 'charger') { size = 15 + Math.random()*3; speed = 2.5 * speedScale; hpCalc = 20 * hpScale; color = '#fbbf24'; vCount = 3; kbResist = 0.5; }
-                else if (type === 'splitter') { size = 18 + Math.random()*4; speed = 1.3 * speedScale; hpCalc = 20 * hpScale; color = '#9a3412'; vCount = 5; kbResist = 0.7; }
-                else { size = 12 + Math.random()*3; speed = (isSwarm ? 1.6 : 1.0) * speedScale + Math.random()*0.3; hpCalc = (isSwarm ? 5 : 12) * hpScale; color = isSwarm ? '#3b82f6' : '#1e293b'; vCount = 4; kbResist = 0.9; }
+                else if (type === 'splitter') { size = 18 + Math.random()*4; speed = 1.4 * speedScale; hpCalc = 20 * hpScale; color = '#9a3412'; vCount = 5; kbResist = 0.7; }
+                else { size = 12 + Math.random()*3; speed = (isSwarm ? 1.8 : 1.1) * speedScale + Math.random()*0.3; hpCalc = (isSwarm ? 5 : 12) * hpScale; color = isSwarm ? '#3b82f6' : '#1e293b'; vCount = 4; kbResist = 0.9; }
 
                 const vertices = [];
                 for(let v=0; v<vCount; v++) vertices.push({ a: (v/vCount)*Math.PI*2, r: 0.7+Math.random()*0.6 });
 
-                // 在螢幕邊緣的矩形框上生成
                 let spawnX, spawnY;
                 if (Math.random() > 0.5) {
                     spawnX = worldX + (Math.random() > 0.5 ? spawnRadiusX : -spawnRadiusX);
@@ -653,7 +655,7 @@
                 }
 
                 if (isSwarm) {
-                    let side = Math.floor(gameSeconds / 10) % 4;
+                    let side = Math.floor(gameSeconds / 5) % 4;
                     if(side===0) { spawnX = worldX + (Math.random()-0.5)*canvas.width; spawnY = worldY - spawnRadiusY; }
                     if(side===1) { spawnX = worldX + spawnRadiusX; spawnY = worldY + (Math.random()-0.5)*canvas.height; }
                     if(side===2) { spawnX = worldX + (Math.random()-0.5)*canvas.width; spawnY = worldY + spawnRadiusY; }
@@ -664,12 +666,13 @@
             }
         }
 
-        // 🌟 10分鐘終極 Boss：星噬者利維坦
+        // 🌟 5分鐘終極 Boss：星噬者利維坦
         function spawnLeviathan() {
-            enemies = []; // 清除雜兵
+            enemies = []; 
             const spawnRadius = Math.max(canvas.width, canvas.height) / 2 + 100;
             const vertices = []; for(let i=0; i<12; i++){ vertices.push({ a: (i/12) * Math.PI * 2, r: i%2===0 ? 1 : 0.6 }); }
-            currentBoss = { type: 'leviathan', isBoss: true, name: '【星噬者 - 利維坦】', x: worldX, y: worldY - spawnRadius, size: 100, speed: player.speed * 0.6, hp: 500000, maxHp: 500000, angle: 0, rotSpeed: 0.05, vertices: vertices, actionTimer: 0, knockbackX: 0, knockbackY: 0, damageFlash: 0, color: '#000000', kbResist: 0 }; 
+            // 5 分鐘就出 Boss，血量設定為 15 萬
+            currentBoss = { type: 'leviathan', isBoss: true, name: '【星噬者 - 利維坦】', x: worldX, y: worldY - spawnRadius, size: 100, speed: player.speed * 0.6, hp: 150000, maxHp: 150000, angle: 0, rotSpeed: 0.05, vertices: vertices, actionTimer: 0, knockbackX: 0, knockbackY: 0, damageFlash: 0, color: '#000000', kbResist: 0 }; 
             enemies.push(currentBoss);
             document.getElementById('time-display').classList.add('boss');
         }
@@ -803,10 +806,16 @@
             if (player.exp >= player.maxExp) { 
                 player.exp -= player.maxExp; player.level++; 
                 
-                if (player.level < 10) player.maxExp += 5;
-                else if (player.level < 20) player.maxExp += 10;
-                else if (player.level < 40) player.maxExp += 15;
-                else player.maxExp += 20;
+                // 🌟 終極指數型經驗值曲線：等級越高，需要農越久！
+                if (player.level < 10) {
+                    player.maxExp += 10 + player.level * 2;
+                } else if (player.level < 20) {
+                    player.maxExp += 20 + player.level * 5;
+                } else if (player.level < 40) {
+                    player.maxExp += 50 + player.level * 10;
+                } else {
+                    player.maxExp += 100 + player.level * 20;
+                }
                 
                 player.maxHp += 2; player.hp = player.maxHp; 
                 document.getElementById('level-display').innerText = player.level; 
@@ -845,14 +854,13 @@
                 document.getElementById('time-display').innerText = `${String(Math.floor(gameSeconds / 60)).padStart(2, '0')}:${String(gameSeconds % 60).padStart(2, '0')}`;
                 document.getElementById('earth-year').innerText = 2084 + gameSeconds;
                 
-                // 🌟 10 分鐘 Boss 降臨
-                if (gameSeconds === 600 && !bossSpawned) { 
+                // 🌟 5 分鐘 Boss 降臨
+                if (gameSeconds === 300 && !bossSpawned) { 
                     bossSpawned = true; 
                     spawnLeviathan(); 
                 }
             }
 
-            // 被動：奈米修復
             if (player.passives.regen && frameCount % 300 === 0) {
                 player.hp = Math.min(player.maxHp, player.hp + player.passives.regen.level);
                 addFloatingText(player, player.passives.regen.level, '#4ade80');
@@ -893,7 +901,6 @@
                 worldX += player.lastFacingX * currentSpeed; worldY += player.lastFacingY * currentSpeed;
             }
 
-            // --- 武器發射邏輯 ---
             if (player.weapons.blaster) {
                 let w = player.weapons.blaster; w.timer++;
                 let cd = Math.max(2, Math.floor(w.baseCooldown * globalCdMult)); 
@@ -984,7 +991,7 @@
                 for(let i=0; i < w.count; i++) { orbitals.push({ x: worldX + Math.cos(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius, y: worldY + Math.sin(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius }); } 
             }
 
-            if (gameSeconds < 600 && !bossSpawned) {
+            if (gameSeconds < 300 && !bossSpawned) {
                 if (frameCount % 15 === 0) spawnEnemyBatch(); 
             }
 
@@ -993,7 +1000,6 @@
                 
                 if (bullets[i].type === 'bomb' && !bullets[i].isEvo) bullets[i].vy += 0.2; 
                 
-                // Blade follows player slightly
                 if (bullets[i].type === 'blade') { bullets[i].x += dx * currentSpeed * 0.5; bullets[i].y += dy * currentSpeed * 0.5; }
 
                 if ((bullets[i].type === 'bomb' || bullets[i].type === 'mine') && bullets[i].life <= 0) {
@@ -1038,7 +1044,6 @@
                 const en = enemies[i];
                 
                 if (en.type === 'leviathan') {
-                    // Boss 行為：緩慢逼近，定期發射環形彈幕
                     let ex = worldX - en.x; let ey = worldY - en.y; let eDist = Math.hypot(ex, ey);
                     if(eDist > 200) { en.x += (ex / eDist) * en.speed; en.y += (ey / eDist) * en.speed; }
                     en.angle += en.rotSpeed;
@@ -1053,12 +1058,11 @@
                 } else if (en.type === 'boss_bullet') {
                     en.x += en.knockbackX; en.y += en.knockbackY;
                 } else {
-                    // 🌟 衝鋒者行為
                     if (en.type === 'charger') {
                         en.actionTimer++;
                         if (en.actionTimer < 60) { en.x += Math.cos(en.angle) * en.speed; en.y += Math.sin(en.angle) * en.speed; }
-                        else if (en.actionTimer === 60) { en.angle = Math.atan2(worldY - en.y, worldX - en.x); } // 瞄準
-                        else if (en.actionTimer > 80) { en.actionTimer = 0; } // 衝刺後重置
+                        else if (en.actionTimer === 60) { en.angle = Math.atan2(worldY - en.y, worldX - en.x); } 
+                        else if (en.actionTimer > 80) { en.actionTimer = 0; } 
                     } else {
                         let ex = worldX - en.x; let ey = worldY - en.y; let eDist = Math.hypot(ex, ey);
                         if(eDist > 0) { en.x += (ex / eDist) * en.speed + en.knockbackX; en.y += (ey / eDist) * en.speed + en.knockbackY; }
@@ -1126,7 +1130,7 @@
                             en.hp -= bullets[j].damage; en.damageFlash = 8;
                             spawnParticles(en.x, en.y, '#38bdf8', 5); addFloatingText(en, bullets[j].damage, '#bae6fd'); 
                         } else if (bullets[j].type === 'blade') {
-                            if (frameCount % 5 === 0) { // Blade piercing damage tick
+                            if (frameCount % 5 === 0) { 
                                 en.hp -= bullets[j].damage; en.damageFlash = 5;
                                 en.knockbackX += Math.cos(bullets[j].angle) * 2 * en.kbResist; en.knockbackY += Math.sin(bullets[j].angle) * 2 * en.kbResist;
                                 spawnParticles(en.x, en.y, '#fbbf24', 3); addFloatingText(en, bullets[j].damage, '#fcd34d');
@@ -1160,7 +1164,7 @@
 
                 if (en.hp <= 0 && en.type !== 'death') {
                     if (en.type === 'leviathan') {
-                        gameOver(true); return; // 擊敗 Boss 獲勝
+                        gameOver(true); return; 
                     }
 
                     if (en.type === 'elite' || en.type === 'tank') {
@@ -1208,7 +1212,6 @@
             }
             if (player.damageFlash > 0) player.damageFlash--;
 
-            // 絲滑寶石吸收
             for (let i = gems.length - 1; i >= 0; i--) { 
                 let g = gems[i];
                 if (!g.isMoving && Math.hypot(worldX - g.x, worldY - g.y) < player.pickupRadius) { g.isMoving = true; g.speed = 1.0; }
@@ -1248,29 +1251,27 @@
             for (let i = floatTexts.length - 1; i >= 0; i--) { floatTexts[i].y -= 1; floatTexts[i].life--; if (floatTexts[i].life <= 0) floatTexts.splice(i, 1); }
         }
 
-        // 🌟 獨立繪製戰機外觀的函式
         function drawPlayerShip(ctx, charId, isDashing, damageFlash) {
             ctx.fillStyle = damageFlash > 0 ? '#ef4444' : (isDashing ? '#a78bfa' : '#e2e8f0'); 
             ctx.strokeStyle = damageFlash > 0 ? '#fca5a5' : '#38bdf8'; 
             ctx.lineWidth = 2; ctx.beginPath(); 
             
-            if (charId === 'ranger') { // 三角戰機
+            if (charId === 'ranger') { 
                 ctx.moveTo(18, 0); ctx.lineTo(-12, 14); ctx.lineTo(-6, 0); ctx.lineTo(-12, -14); ctx.closePath();
-            } else if (charId === 'heavy') { // 裝甲坦克
+            } else if (charId === 'heavy') { 
                 ctx.moveTo(14, 10); ctx.lineTo(-12, 14); ctx.lineTo(-12, -14); ctx.lineTo(14, -10); ctx.closePath();
-                ctx.moveTo(0, -6); ctx.lineTo(20, -2); ctx.lineTo(20, 2); ctx.lineTo(0, 6); // 砲管
-            } else if (charId === 'scout') { // 飛翼
+                ctx.moveTo(0, -6); ctx.lineTo(20, -2); ctx.lineTo(20, 2); ctx.lineTo(0, 6); 
+            } else if (charId === 'scout') { 
                 ctx.moveTo(22, 0); ctx.lineTo(-8, 8); ctx.lineTo(-16, 20); ctx.lineTo(-4, 0); ctx.lineTo(-16, -20); ctx.lineTo(-8, -8); ctx.closePath();
-            } else if (charId === 'engineer') { // 圓盤
+            } else if (charId === 'engineer') { 
                 ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.moveTo(16, -4); ctx.lineTo(16, 4); ctx.moveTo(-16, -4); ctx.lineTo(-16, 4);
-            } else if (charId === 'ghost') { // 新月
+            } else if (charId === 'ghost') { 
                 ctx.arc(4, 0, 16, Math.PI*0.2, Math.PI*1.8, true); ctx.quadraticCurveTo(-10, 0, 4, 15);
-            } else { // 備用
+            } else { 
                 ctx.moveTo(18, 0); ctx.lineTo(-12, 14); ctx.lineTo(-6, 0); ctx.lineTo(-12, -14); ctx.closePath();
             }
             ctx.fill(); ctx.stroke();
             
-            // 推進器火焰
             if(keys['ArrowUp'] || keys['KeyW'] || keys['ArrowDown'] || keys['KeyS'] || keys['ArrowLeft'] || keys['KeyA'] || keys['ArrowRight'] || keys['KeyD'] || isTouching || isDashing) { 
                 ctx.fillStyle = isDashing ? '#d946ef' : '#f97316'; ctx.beginPath(); 
                 if(charId === 'heavy') { ctx.moveTo(-12, -8); ctx.lineTo(-20 - Math.random()*10, -8); ctx.lineTo(-12, -4); ctx.moveTo(-12, 8); ctx.lineTo(-20 - Math.random()*10, 8); ctx.lineTo(-12, 4); }
@@ -1393,7 +1394,6 @@
                     ctx.save(); ctx.translate(canvas.width / 2, canvas.height / 2); ctx.rotate(Math.atan2(player.lastFacingY, player.lastFacingX)); 
                     if (player.invincibleTimer > 0 && Math.floor(frameCount / 5) % 2 === 0) ctx.globalAlpha = 0.5;
                     
-                    // 🌟 呼叫新的專屬機體繪製函式
                     drawPlayerShip(ctx, CHARACTERS[selectedCharIndex].id, player.isDashing, player.damageFlash);
                     
                     ctx.globalAlpha = 1.0; ctx.restore(); 
