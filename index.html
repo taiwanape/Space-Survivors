@@ -210,7 +210,7 @@
             CREATED BY 林小木
         </div>
         <div style="position: absolute; bottom: env(safe-area-inset-bottom, 20px); font-size: 12px; color: #475569; letter-spacing: 2px;">
-            VER 1.5.0 | HORDE AWAKENING
+            VER 1.6.0 | ULTIMATE SURVIVAL
         </div>
     </div>
 
@@ -350,7 +350,7 @@
         let gameState = 'title';
         let worldX = 0, worldY = 0, score = 0, frameCount = 0, gameSeconds = 0, collectedCoins = 0;
         let enemies = [], bullets = [], gems = [], coinsArr = [], floatTexts = [], particles = [];
-        let miniBlackHoles = [], destructibles = [], consumables = []; // 🌟 移除了 gravityZones (原本的黑圈圈)
+        let destructibles = [], consumables = []; 
         
         let player = { 
             size: 16, hp: 0, maxHp: 0, exp: 0, maxExp: 5, level: 1, 
@@ -367,12 +367,12 @@
 
         // --- 武器與被動資料 ---
         const WEAPON_DB = {
-            blaster: { name: '前鋒機砲', icon: '🔫', maxLevel: 8, evoReq: 'cooldown', evoName: '裂空者', evoIcon: '🌠', desc: ['朝面朝方向發射彈道', '額外發射1個投射物', '基礎傷害提高', '額外發射1個投射物', '基礎傷害提高', '投射物速度加快', '可穿透敵人', '冷卻時間極大幅縮短'] },
-            laser: { name: '脈衝雷射', icon: '⚡', maxLevel: 8, evoReq: 'damage', evoName: '天罰陣列', evoIcon: '🛰️', desc: ['自動鎖定最近的敵人', '基礎傷害提高', '冷卻時間縮短', '基礎傷害提高', '投射物速度加快', '冷卻時間縮短', '基礎傷害提高', '無冷卻機關槍'] },
+            blaster: { name: '前鋒機砲', icon: '🔫', maxLevel: 8, evoReq: 'cooldown', evoName: '裂空者', evoIcon: '🌠', desc: ['朝面朝方向發射彈道', '額外發射1個投射物', '基礎傷害提高', '額外發射1個投射物', '基礎傷害提高', '投射物速度加快', '可穿透敵人', '冷卻時間大幅縮短'] },
+            laser: { name: '脈衝雷射', icon: '⚡', maxLevel: 8, evoReq: 'damage', evoName: '天罰陣列', evoIcon: '🛰️', desc: ['自動鎖定最近的敵人', '基礎傷害提高', '冷卻時間縮短', '基礎傷害提高', '投射物速度加快', '冷卻時間縮短', '基礎傷害提高', '高速機關槍'] },
             drone: { name: '護衛無人機', icon: '🛸', maxLevel: 8, evoReq: 'proj_speed', evoName: '星塵結界', evoIcon: '💫', desc: ['環繞在角色周圍', '基礎傷害提高', '額外增加1台', '基礎速度提高', '效果範圍擴大', '額外增加1台', '基礎傷害提高', '進化為高速防禦網'] },
-            plasma: { name: '電漿爆破', icon: '🔮', maxLevel: 8, evoReq: 'area', evoName: '超新星', evoIcon: '🌌', desc: ['隨機發射爆炸球', '效果範圍擴大', '額外發射1個', '基礎傷害提高', '冷卻時間縮短', '額外發射2個', '效果範圍擴大', '進化為全畫面黑洞'] },
+            plasma: { name: '電漿爆破', icon: '🔮', maxLevel: 8, evoReq: 'area', evoName: '超新星', evoIcon: '🌌', desc: ['隨機發射爆炸球', '效果範圍擴大', '額外發射1個', '基礎傷害提高', '冷卻時間縮短', '額外發射2個', '效果範圍擴大', '進化為脈衝黑洞'] },
             aura: { name: '輻射力場', icon: '🌀', maxLevel: 8, evoReq: 'magnet', evoName: '絕對領域', evoIcon: '💠', desc: ['對身邊敵人造成持續傷害', '效果範圍擴大', '傷害頻率加快', '基礎傷害提高', '效果範圍擴大', '傷害頻率加快', '基礎傷害提高', '極速高傷領域'] },
-            bomb: { name: '櫻桃炸彈', icon: '🍒', maxLevel: 8, evoReq: 'hp', evoName: '核聚變彈', evoIcon: '☢️', desc: ['投擲會爆炸的炸彈', '爆炸範圍擴大', '冷卻時間縮短', '額外投擲1個', '基礎傷害提高', '爆炸範圍擴大', '額外投擲1個', '引發毀滅性核爆'] }
+            bomb: { name: '櫻桃炸彈', icon: '🍒', maxLevel: 8, evoReq: 'hp', evoName: '核聚變彈', evoIcon: '☢️', desc: ['投擲會爆炸的炸彈', '爆炸範圍擴大', '冷卻時間縮短', '額外投擲1個', '基礎傷害提高', '爆炸範圍擴大', '額外投擲1個', '引發大範圍核爆'] }
         };
 
         const PASSIVE_DB = {
@@ -509,7 +509,7 @@
             updateRow('weapon-row', 'passive-row'); updateRow('pause-weapon-row', 'pause-passive-row');
         }
 
-        // 🌟 武器數值大調：初期冷卻時間大幅下降
+        // 🌟 武器數值再平衡 (VS感)：確保進化不會過度 OP，變成持續削血的手段
         function acquireWeapon(id) {
             if(id === 'blaster') player.weapons.blaster = { level: 1, baseDamage: 10, baseCooldown: 30, baseSpeed: 15, count: 1, timer: 0, isEvolved: false };
             if(id === 'laser') player.weapons.laser = { level: 1, baseDamage: 8, baseCooldown: 40, baseSpeed: 18, timer: 0, isEvolved: false };
@@ -533,12 +533,13 @@
 
         function evolveWeapon(id) {
             let w = player.weapons[id]; w.isEvolved = true;
-            if(id === 'blaster') { w.count = 8; w.baseCooldown = 8; w.baseDamage *= 1.5; w.baseSpeed = 30; } 
-            if(id === 'laser') { w.baseCooldown = 10; w.baseDamage *= 2.5; w.baseAoe = 100; } 
-            if(id === 'drone') { w.count = 12; w.baseSpeed = 0.2; w.baseRadius = 150; w.baseDamage *= 2; } 
-            if(id === 'plasma') { w.count = 1; w.baseCooldown = 80; w.baseSpeed = 2; w.baseAoe = 400; w.baseDamage *= 10; } 
-            if(id === 'aura') { w.baseTickRate = 5; w.baseRadius = 300; w.baseDamage *= 3; }
-            if(id === 'bomb') { w.count = 1; w.baseCooldown = 150; w.baseAoe = 600; w.baseDamage *= 20; }
+            // 🌟 削弱進化武器的過度傷害，將其轉變為穩定的 DPS 或控場
+            if(id === 'blaster') { w.count = 6; w.baseCooldown = 10; w.baseDamage *= 1.2; w.baseSpeed = 25; } 
+            if(id === 'laser') { w.baseCooldown = 15; w.baseDamage *= 1.5; w.baseAoe = 80; } 
+            if(id === 'drone') { w.count = 8; w.baseSpeed = 0.15; w.baseRadius = 140; w.baseDamage *= 1.5; } 
+            if(id === 'plasma') { w.count = 1; w.baseCooldown = 120; w.baseSpeed = 2; w.baseAoe = 300; w.baseDamage *= 3; } 
+            if(id === 'aura') { w.baseTickRate = 10; w.baseRadius = 200; w.baseDamage *= 1.5; }
+            if(id === 'bomb') { w.count = 1; w.baseCooldown = 180; w.baseAoe = 450; w.baseDamage *= 8; }
             updateInventoryUI();
         }
 
@@ -551,7 +552,6 @@
             const hpBonus = (saveData.upgrades.hp || 0) * 10;
             const speedBonus = (saveData.upgrades.speed || 0) * 0.5;
 
-            // 🌟 降低初始升級所需經驗，加速前期滾雪球
             player = { 
                 size: 16, speed: char.speed + speedBonus, hp: char.hp + hpBonus, maxHp: char.hp + hpBonus, 
                 exp: 0, maxExp: 5, level: 1, 
@@ -562,7 +562,7 @@
             calcStats(); acquireWeapon(char.weapon); 
             
             worldX = 0; worldY = 0; score = 0; frameCount = 0; gameSeconds = 0; collectedCoins = 0; screenShake = 0; deathTimer = 0;
-            enemies = []; bullets = []; gems = []; coinsArr = []; floatTexts = []; particles = []; miniBlackHoles = []; destructibles = []; consumables = []; 
+            enemies = []; bullets = []; gems = []; coinsArr = []; floatTexts = []; particles = []; destructibles = []; consumables = []; 
             bossSpawned = false; currentBoss = null; warningTimer = 0;
             
             document.getElementById('game-ui').classList.remove('hidden');
@@ -608,38 +608,41 @@
 
         function getScreenPos(wx, wy) { return { x: wx - worldX + canvas.width / 2, y: wy - worldY + canvas.height / 2 }; }
 
-        // 🌟 全新波次生成系統：每半秒生成一次，數量無上限狂飆
+        // 🌟 重新設計的「怪物海」與「血量指數成長」機制
         function spawnEnemyBatch() {
-            if (enemies.length > 600) return; // 提高同畫面怪物上限至 600 隻
+            if (enemies.length > 500) return; // 最高維持 500 隻以防卡頓
 
             let waveMin = Math.floor(gameSeconds / 60);
-            let timeScale = 1 + (waveMin * 0.3);
             
-            // 隨著時間，每次生成的怪物數量變多
-            let count = 3 + Math.floor(gameSeconds / 20); 
+            // 🌟 史詩級血量提升：後期怪物血量呈指數成長，變成超硬的肉牆
+            let hpScale = 1 + waveMin * 0.5 + Math.pow(waveMin, 1.8) * 0.2; 
             
-            let isSwarm = (gameSeconds % 120 >= 105); // 每 2 分鐘的最後 15 秒觸發怪物潮
-            if (isSwarm) count *= 2; 
+            // 生成數量穩定提升
+            let count = 3 + Math.floor(gameSeconds / 15); 
+            
+            let isSwarm = (gameSeconds % 120 >= 105); 
+            if (isSwarm) count *= 1.5; 
 
             let spawnRadius = Math.max(canvas.width, canvas.height) / 2 + 100;
             
             for(let i=0; i<count; i++) {
                 let type = 'minion';
-                if (waveMin >= 1 && Math.random() < 0.1) type = 'splitter';
+                if (waveMin >= 1 && Math.random() < 0.15) type = 'splitter';
+                // 🌟 新增：後期出現超高血量、超慢速的「重裝怪(Tank)」，用來擠壓玩家空間
+                if (waveMin >= 3 && Math.random() < 0.2 + (waveMin * 0.02)) type = 'tank';
                 if (gameSeconds > 0 && gameSeconds % 60 === 0 && i === 0) type = 'elite';
 
-                // 稍微提升怪物速度，確保他們能追上玩家
-                let size, speed, hpCalc, color, vCount;
-                if (type === 'elite') { size = 30 + Math.random()*10; speed = 0.8; hpCalc = 150 * timeScale; color = '#9f1239'; vCount = 4; }
-                else if (type === 'splitter') { size = 20 + Math.random()*5; speed = 1.2; hpCalc = 30 * timeScale; color = '#9a3412'; vCount = 6; }
-                else { size = 12 + Math.random()*4; speed = (isSwarm ? 1.8 : 1.0) + Math.random()*0.5; hpCalc = (isSwarm ? 2 : 10) * timeScale; color = isSwarm ? '#3b82f6' : '#1e293b'; vCount = 5; }
+                let size, speed, hpCalc, color, vCount, kbResist;
+                if (type === 'elite') { size = 35 + Math.random()*10; speed = 0.9; hpCalc = 250 * hpScale; color = '#9f1239'; vCount = 4; kbResist = 0.1; }
+                else if (type === 'tank') { size = 25 + Math.random()*5; speed = 0.6; hpCalc = 80 * hpScale; color = '#4c1d95'; vCount = 6; kbResist = 0.2; } // 幾乎不吃擊退
+                else if (type === 'splitter') { size = 18 + Math.random()*4; speed = 1.3; hpCalc = 15 * hpScale; color = '#9a3412'; vCount = 5; kbResist = 0.8; }
+                else { size = 12 + Math.random()*3; speed = (isSwarm ? 1.6 : 1.1) + Math.random()*0.4; hpCalc = (isSwarm ? 3 : 8) * hpScale; color = isSwarm ? '#3b82f6' : '#1e293b'; vCount = 4; kbResist = 1.0; }
 
                 const vertices = [];
                 for(let v=0; v<vCount; v++) vertices.push({ a: (v/vCount)*Math.PI*2, r: 0.7+Math.random()*0.6 });
 
                 let spawnAngle = Math.random() * Math.PI * 2;
                 if (isSwarm) {
-                    // Swarm 時怪物會從固定某個方向湧來
                     let swarmAngle = (Math.floor(gameSeconds / 10) % 4) * (Math.PI / 2); 
                     spawnAngle = swarmAngle + (Math.random() - 0.5); 
                 }
@@ -647,14 +650,15 @@
                 let spawnX = worldX + Math.cos(spawnAngle) * spawnRadius;
                 let spawnY = worldY + Math.sin(spawnAngle) * spawnRadius;
                 
-                enemies.push({ type: type, isBoss: false, x: spawnX, y: spawnY, size: size, speed: speed, hp: hpCalc, maxHp: hpCalc, angle: 0, rotSpeed: (Math.random()-0.5)*0.05, vertices: vertices, knockbackX: 0, knockbackY: 0, damageFlash: 0, color: color });
+                // 🌟 新增 kbResist (擊退抗性)，越接近 0 越難被擊退
+                enemies.push({ type: type, isBoss: false, x: spawnX, y: spawnY, size: size, speed: speed, hp: hpCalc, maxHp: hpCalc, angle: 0, rotSpeed: (Math.random()-0.5)*0.05, vertices: vertices, knockbackX: 0, knockbackY: 0, damageFlash: 0, color: color, kbResist: kbResist });
             }
         }
 
         function spawnDeath() {
             const angle = Math.random() * Math.PI * 2; const spawnRadius = Math.max(canvas.width, canvas.height) / 2 + 200;
             const vertices = []; for(let i=0; i<16; i++){ vertices.push({ a: (i/16) * Math.PI * 2, r: 0.8 + Math.random() * 0.4 }); }
-            currentBoss = { type: 'death', isBoss: true, name: '【時空清道夫】', x: worldX + Math.cos(angle) * spawnRadius, y: worldY + Math.sin(angle) * spawnRadius, size: 80, speed: player.speed * 1.5, hp: 9999999, maxHp: 9999999, angle: 0, rotSpeed: 0.2, vertices: vertices, abilityTimer: 0, knockbackX: 0, knockbackY: 0, damageFlash: 0, color: '#000000' };
+            currentBoss = { type: 'death', isBoss: true, name: '【時空清道夫】', x: worldX + Math.cos(angle) * spawnRadius, y: worldY + Math.sin(angle) * spawnRadius, size: 80, speed: player.speed * 1.5, hp: 9999999, maxHp: 9999999, angle: 0, rotSpeed: 0.2, vertices: vertices, abilityTimer: 0, knockbackX: 0, knockbackY: 0, damageFlash: 0, color: '#000000', kbResist: 0 }; // 死神免疫擊退
             enemies.push(currentBoss);
         }
 
@@ -786,7 +790,6 @@
             if (player.exp >= player.maxExp) { 
                 player.exp -= player.maxExp; player.level++; 
                 
-                // 🌟 優化升級經驗曲線
                 if (player.level < 10) player.maxExp += 5;
                 else if (player.level < 20) player.maxExp += 10;
                 else if (player.level < 40) player.maxExp += 15;
@@ -798,7 +801,7 @@
                 spawnParticles(worldX, worldY, '#facc15', 50);
                 floatTexts.push({x: worldX, y: worldY - 40, text: "LEVEL UP!", life: 60, color: '#facc15'});
                 
-                enemies.forEach(en => { if (Math.hypot(worldX - en.x, worldY - en.y) < 150 && !en.isBoss && en.type !== 'elite') { en.hp = 0; } });
+                enemies.forEach(en => { if (Math.hypot(worldX - en.x, worldY - en.y) < 150 && !en.isBoss && en.type !== 'elite' && en.type !== 'tank') { en.hp = 0; } });
 
                 triggerLevelUp(); 
             }
@@ -836,11 +839,9 @@
             if (dashRequested && player.dashCd === 0) {
                 dashRequested = false; player.isDashing = true; player.dashTimer = 15; player.dashCd = 240; 
                 dashBtn.classList.add('cooldown');
-                miniBlackHoles.push({ x: worldX, y: worldY, radius: 80, life: 120 });
                 screenShake = Math.min(screenShake + 8, 12); 
             }
 
-            // 移除惱人的重力亂拉玩家，僅保留視覺，讓走位回歸純粹的 VS 體驗
             let currentSpeed = player.isDashing ? player.speed * 4.0 : player.speed;
             if (player.isDashing) { player.dashTimer--; if (player.dashTimer <= 0) player.isDashing = false; }
 
@@ -922,7 +923,6 @@
                     if (w.isEvolved) {
                         bullets.push({ type: 'bomb', isEvo: true, x: worldX, y: worldY, vx: Math.cos(player.angle) * fSpeed * 0.5, vy: Math.sin(player.angle) * fSpeed * 0.5, life: 90, damage: fDmg, aoe: fAoe });
                     } else {
-                        // 炸彈給予微小引力使其有拋物線感
                         for(let i=0; i<w.count; i++) { let angle = player.angle + (Math.random()-0.5); bullets.push({ type: 'bomb', x: worldX, y: worldY, vx: Math.cos(angle) * fSpeed, vy: Math.sin(angle) * fSpeed, life: 40 + Math.random()*20, damage: fDmg, aoe: fAoe }); }
                     }
                 }
@@ -935,14 +935,12 @@
                 for(let i=0; i < w.count; i++) { orbitals.push({ x: worldX + Math.cos(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius, y: worldY + Math.sin(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius }); } 
             }
 
-            // 🌟 改變生成節奏，每半秒生成一次大批怪物
             if (gameSeconds < 900) {
                 if (frameCount % 30 === 0) spawnEnemyBatch();
             }
 
             for (let i = bullets.length - 1; i >= 0; i--) { 
                 bullets[i].x += bullets[i].vx; bullets[i].y += bullets[i].vy; bullets[i].life--; 
-                // 給予未進化的炸彈「往下墜」的物理效果
                 if (bullets[i].type === 'bomb' && !bullets[i].isEvo) bullets[i].vy += 0.2; 
 
                 if (bullets[i].type === 'bomb' && bullets[i].life <= 0) {
@@ -959,7 +957,6 @@
             }
             
             for (let i = particles.length - 1; i >= 0; i--) { particles[i].x += particles[i].vx; particles[i].y += particles[i].vy; particles[i].life--; particles[i].vx *= 0.92; particles[i].vy *= 0.92; if (particles[i].life <= 0) particles.splice(i, 1); }
-            for (let i = miniBlackHoles.length - 1; i >= 0; i--) { miniBlackHoles[i].life--; if(miniBlackHoles[i].life <= 0) miniBlackHoles.splice(i, 1); }
 
             for (let i = destructibles.length - 1; i >= 0; i--) {
                 let d = destructibles[i]; let isHit = false;
@@ -997,6 +994,7 @@
                 } else if (player.invincibleTimer <= 0 && Math.hypot(worldX - en.x, worldY - en.y) < player.size + en.size - 5) {
                     let dmg = 10; 
                     if (en.type === 'splitter') dmg = 15; 
+                    if (en.type === 'tank') dmg = 20; 
                     if (en.type === 'elite') dmg = 30; 
                     if (en.type === 'death') dmg = 9999; 
                     damageTakenThisFrame = Math.max(damageTakenThisFrame, dmg);
@@ -1008,7 +1006,8 @@
                         if (frameCount % Math.max(1, Math.floor(w.baseTickRate * globalCdMult)) === 0) {
                             en.hp -= w.baseDamage * globalDmgMult; 
                             let auraAngle = Math.atan2(en.y - worldY, en.x - worldX);
-                            en.knockbackX += Math.cos(auraAngle) * 0.5; en.knockbackY += Math.sin(auraAngle) * 0.5;
+                            // 🌟 套用霸體 (kbResist)
+                            en.knockbackX += Math.cos(auraAngle) * 0.5 * en.kbResist; en.knockbackY += Math.sin(auraAngle) * 0.5 * en.kbResist;
                             en.damageFlash = 4; floatTexts.push({x: en.x, y: en.y, text: Math.floor(w.baseDamage * globalDmgMult), life: 15, color: '#f0abfc'}); 
                         }
                     }
@@ -1028,20 +1027,22 @@
                                     if (Math.hypot(bullets[j].x - e2.x, bullets[j].y - e2.y) < aoeRadius) {
                                         e2.hp -= bullets[j].damage; 
                                         let explosionAngle = Math.atan2(e2.y - bullets[j].y, e2.x - bullets[j].x);
-                                        e2.knockbackX += Math.cos(explosionAngle) * 8 * (e2.isBoss ? 0 : 1);
-                                        e2.knockbackY += Math.sin(explosionAngle) * 8 * (e2.isBoss ? 0 : 1);
+                                        // 🌟 套用霸體
+                                        e2.knockbackX += Math.cos(explosionAngle) * 4 * e2.kbResist;
+                                        e2.knockbackY += Math.sin(explosionAngle) * 4 * e2.kbResist;
                                         e2.damageFlash = 6;
                                         floatTexts.push({x: e2.x, y: e2.y, text: Math.floor(bullets[j].damage), life: 20, color: '#f0abfc'});
                                     }
                                 });
                                 bullets.splice(j, 1); 
                             } else {
-                                if (frameCount % 10 === 0) {
+                                // 🌟 降低超新星的傷害頻率，不再瞬間秒殺
+                                if (frameCount % 20 === 0) {
                                     spawnParticles(en.x, en.y, '#d946ef', 2);
                                     en.hp -= bullets[j].damage;
                                     let explosionAngle = Math.atan2(en.y - bullets[j].y, en.x - bullets[j].x);
-                                    en.knockbackX += Math.cos(explosionAngle) * 0.5 * (en.isBoss ? 0 : 1);
-                                    en.knockbackY += Math.sin(explosionAngle) * 0.5 * (en.isBoss ? 0 : 1);
+                                    en.knockbackX += Math.cos(explosionAngle) * 0.5 * en.kbResist;
+                                    en.knockbackY += Math.sin(explosionAngle) * 0.5 * en.kbResist;
                                     en.damageFlash = 6;
                                     floatTexts.push({x: en.x, y: en.y, text: Math.floor(bullets[j].damage), life: 20, color: '#f0abfc'});
                                 }
@@ -1053,9 +1054,10 @@
                         } else {
                             en.hp -= bullets[j].damage; 
                             let color = bullets[j].type === 'blaster' ? '#facc15' : '#38bdf8';
-                            let kbForce = bullets[j].type === 'blaster' ? 3 : 1; 
-                            en.knockbackX += Math.cos(bulletAngle) * kbForce * (en.isBoss ? 0 : 1);
-                            en.knockbackY += Math.sin(bulletAngle) * kbForce * (en.isBoss ? 0 : 1);
+                            // 🌟 降低基礎擊退，套用霸體
+                            let kbForce = bullets[j].type === 'blaster' ? 2 : 0.5; 
+                            en.knockbackX += Math.cos(bulletAngle) * kbForce * en.kbResist;
+                            en.knockbackY += Math.sin(bulletAngle) * kbForce * en.kbResist;
                             en.damageFlash = 5;
                             spawnParticles(bullets[j].x, bullets[j].y, color, 3); 
                             floatTexts.push({x: en.x + (Math.random()-0.5)*10, y: en.y, text: Math.floor(bullets[j].damage), life: 15, color: 'white'}); 
@@ -1070,8 +1072,9 @@
                         if (Math.hypot(orb.x - en.x, orb.y - en.y) < en.size + 20 && frameCount % 10 === 0) { 
                             en.hp -= fDmg; 
                             let kbAngle = Math.atan2(en.y - orb.y, en.x - orb.x);
-                            en.knockbackX += Math.cos(kbAngle) * 3 * (en.isBoss ? 0 : 1); 
-                            en.knockbackY += Math.sin(kbAngle) * 3 * (en.isBoss ? 0 : 1);
+                            // 🌟 套用霸體
+                            en.knockbackX += Math.cos(kbAngle) * 2 * en.kbResist; 
+                            en.knockbackY += Math.sin(kbAngle) * 2 * en.kbResist;
                             en.damageFlash = 5;
                             spawnParticles(orb.x, orb.y, '#facc15', 2); floatTexts.push({x: en.x, y: en.y, text: Math.floor(fDmg), life: 15, color: 'white'}); 
                         } 
@@ -1089,11 +1092,14 @@
                         for(let s=0; s<splitCount; s++) {
                             let sAngle = Math.random() * Math.PI * 2;
                             const v = []; for(let vIdx=0; vIdx<5; vIdx++) v.push({ a: (vIdx/5)*Math.PI*2, r: 0.7+Math.random()*0.3 });
-                            enemies.push({ type: 'minion', isBoss: false, x: en.x + Math.cos(sAngle)*5, y: en.y + Math.sin(sAngle)*5, size: 8 + Math.random()*3, speed: en.speed * 1.5, hp: 5, maxHp: 5, angle: 0, rotSpeed: 0.1, vertices: v, knockbackX: Math.cos(sAngle)*10, knockbackY: Math.sin(sAngle)*10, damageFlash: 0, color: '#1e293b' });
+                            enemies.push({ type: 'minion', isBoss: false, x: en.x + Math.cos(sAngle)*5, y: en.y + Math.sin(sAngle)*5, size: 8 + Math.random()*3, speed: en.speed * 1.5, hp: 5, maxHp: 5, angle: 0, rotSpeed: 0.1, vertices: v, knockbackX: Math.cos(sAngle)*10, knockbackY: Math.sin(sAngle)*10, damageFlash: 0, color: '#1e293b', kbResist: 1.0 });
                         }
                         gems.push({ x: en.x, y: en.y, value: 5, type: 'green' });
+                    } else if (en.type === 'tank') {
+                        // 重裝怪高機率掉紅寶石
+                        if (Math.random() < 0.5) gems.push({ x: en.x, y: en.y, value: 15, type: 'red' }); 
+                        else gems.push({ x: en.x, y: en.y, value: 5, type: 'green' });
                     } else {
-                        // 🌟 大幅提升寶石掉落率至近 60%
                         if (Math.random() < 0.6) {
                             let gemVal = 1; let gemType = 'blue';
                             if(Math.random() < 0.15) { gemVal = 5; gemType = 'green'; }
@@ -1215,7 +1221,6 @@
                 coinsArr.forEach(c => { const pos = getScreenPos(c.x, c.y); ctx.beginPath(); ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#ca8a04'; ctx.beginPath(); ctx.arc(pos.x, pos.y, 2, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#facc15'; });
                 ctx.shadowBlur = 0;
 
-                // 🌟 優化敵人繪製：移除不需要的繪圖指令以提升海量敵人的效能
                 enemies.forEach(en => {
                     const pos = getScreenPos(en.x, en.y); ctx.save(); ctx.translate(pos.x, pos.y); ctx.rotate(en.angle); 
                     if (en.damageFlash > 0) { ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#f87171'; } 
