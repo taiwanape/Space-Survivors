@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>星際倖存者：輓救行動 (V4 完美架構版)</title>
+    <title>星際倖存者：輓救行動</title>
     <style>
         * { box-sizing: border-box; -webkit-touch-callout: none; }
         body { 
-            margin: 0; padding: 0; background: #1a0505; /* VS經典暗紅背景 */
+            margin: 0; padding: 0; background: #1a0505; /* VS風格暗紅 */ 
             overflow: hidden; color: #f8fafc; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             touch-action: none; overscroll-behavior: none; user-select: none; -webkit-user-select: none; 
             width: 100vw; 
-            height: 100vh; /* 舊版瀏覽器備用 */
-            height: 100dvh; /* iOS Safari 完美高度解決方案 */
+            height: 100vh; /* 舊版 iOS 備用 */
+            height: 100dvh; /* 新版 iOS 完美高度 */
         }
         canvas { display: block; width: 100%; height: 100%; touch-action: none; }
         
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100dvh; display: flex; flex-direction: column; pointer-events: none; z-index: 5; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; display: flex; flex-direction: column; pointer-events: none; z-index: 5; }
         .hidden { display: none !important; }
         
         button { touch-action: manipulation; outline: none; }
@@ -34,7 +34,7 @@
         .btn:disabled { background: #1e293b; border-color: #334155; box-shadow: 0 4px 0 #0f172a; transform: none; cursor: not-allowed; color: #64748b; }
         
         /* === 遊戲內 HUD === */
-        .top-exp-bar { position: absolute; top: env(safe-area-inset-top, 0px); left: 0; width: 100%; height: 14px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #1e293b; z-index: 10; pointer-events: none; }
+        .top-exp-bar { position: absolute; top: env(safe-area-inset-top, 0px); left: 0; width: 100%; height: 14px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #1e293b; z-index: 10; pointer-events: none; margin-top: max(0px, env(safe-area-inset-top)); }
         #exp-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #60a5fa, #93c5fd); width: 0%; transition: width 0.2s ease-out; box-shadow: 0 0 10px #3b82f6; }
         
         .hud-container { position: absolute; top: calc(20px + max(0px, env(safe-area-inset-top))); left: 0; width: 100%; display: flex; justify-content: space-between; padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); box-sizing: border-box; pointer-events: none; z-index: 9; }
@@ -49,7 +49,7 @@
         
         @keyframes pulseGlow { 0% { box-shadow: 0 0 5px #facc15; } 50% { box-shadow: 0 0 15px #fbbf24; } 100% { box-shadow: 0 0 5px #facc15; } }
 
-        /* 🌟 成就解鎖彈窗 (遊戲內) */
+        /* 🌟 成就解鎖彈窗 */
         #achievement-popup { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); background: #2e0909; border: 2px solid #facc15; border-radius: 8px; padding: 10px 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 0 #000; z-index: 100; transition: top 0.5s; pointer-events: none; }
         #achievement-popup.show { top: calc(30px + max(0px, env(safe-area-inset-top))); }
 
@@ -87,11 +87,11 @@
         .char-weapon-info { display: inline-block; background: #1e293b; border: 1px solid #475569; padding: 4px 10px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #cbd5e1; margin-top: 5px; box-shadow: 0 2px 0 #0f172a;}
         .char-info-text p { margin: 8px 0 0 0; font-size: 14px; color: #94a3b8; line-height: 1.5; text-shadow: 1px 1px 0 #000;}
         
-        .char-stats-grid { display: flex; flex-direction: column; gap: 0; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px solid #334155; }
-        .stat-item-row { display: flex; justify-content: space-between; padding: 6px 10px; font-family: monospace; font-size: 15px; }
-        .stat-item-row:nth-child(odd) { background: rgba(255,255,255,0.05); }
-        .stat-label { color: #cbd5e1; font-weight: bold; text-shadow: 1px 1px 0 #000; }
-        .stat-value { color: #facc15; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+        .char-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 15px; background: rgba(15,23,42,0.8); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 13px; border: 1px solid #334155; }
+        .stat-item-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #334155; padding: 4px 0; }
+        .stat-item-row:last-child, .stat-item-row:nth-last-child(2) { border-bottom: none; }
+        .stat-label { color: #94a3b8; }
+        .stat-value { color: #f8fafc; font-weight: bold; text-align: right; }
         .stat-value.bonus { color: #4ade80; }
 
         .char-grid-bottom { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 15px; align-content: start; -webkit-overflow-scrolling: touch; }
@@ -191,7 +191,7 @@
                 <div>LV <span id="level-display">1</span></div>
                 <div style="color:#facc15">🪙 <span id="ingame-coin-display">0</span></div>
                 <div style="color:#f87171">💀 <span id="score-display">0</span></div>
-                <button id="pause-btn-ingame" onclick="togglePause()">⏸ 選單</button>
+                <button id="pause-btn-ingame" onclick="togglePause()">⏸ 暫停</button>
             </div>
         </div>
         <button id="dash-btn" onclick="triggerDash()">空間<br>摺疊</button>
@@ -246,7 +246,6 @@
         </div>
         <div class="stage-list-container" id="stage-list"></div>
         <div class="bottom-action-bar">
-            <!-- 🌟 直接開始遊戲，無任何拖泥帶水 -->
             <button class="btn btn-green" onclick="startGame()">開始出擊</button>
         </div>
     </div>
@@ -283,7 +282,7 @@
             <h1 style="color: #facc15; letter-spacing: 4px; text-shadow: 0 0 20px #ca8a04; font-size: 40px;">回收物資</h1>
             <div id="chest-box" class="chest-img" onclick="openChest()">📦</div>
             <div id="chest-reward-ui" style="display: none; width: 100%; align-items: center; flex-direction: column;">
-                <div style="background: #1e293b; border: 2px solid #facc15; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; margin: 20px auto; box-shadow: 0 4px 0 #000;" id="chest-item-box"></div>
+                <div style="background: #0f172a; border: 2px solid #facc15; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; margin: 20px auto; box-shadow: 0 4px 0 #000;" id="chest-item-box"></div>
                 <div style="color: #facc15; font-size: 28px; font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 0 #000;">🪙 +<span id="chest-coins">0</span></div>
                 <button class="btn btn-green" onclick="closeChest()" style="width: 200px;">完成</button>
             </div>
@@ -344,7 +343,7 @@
         // 🛡️ 終極存檔保險箱 (絕對防當機)
         let saveData = { coins: 0, upgrades: {}, achievements: [] };
         try {
-            const stored = localStorage.getItem('spaceSurvivorsSave_v5');
+            const stored = localStorage.getItem('spaceSurvivorsSave_v431');
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (parsed.coins !== undefined) saveData.coins = parseInt(parsed.coins) || 0;
@@ -354,14 +353,15 @@
         } catch(e) { console.error("存檔損毀，已重置"); }
         
         function saveGame() { 
-            localStorage.setItem('spaceSurvivorsSave_v5', JSON.stringify(saveData)); 
+            localStorage.setItem('spaceSurvivorsSave_v431', JSON.stringify(saveData)); 
             updateMenuCoins(); 
         }
 
-        // ====== 核心變數 ======
-        let gameState = 'title';
+        // ====== 核心全域變數 (修復 ReferenceError) ======
         let selectedCharIndex = 0;
         let selectedStageIndex = 0;
+        
+        let gameState = 'title';
         let worldX = 0, worldY = 0, score = 0, frameCount = 0, gameSeconds = 0, collectedCoins = 0;
         let enemies = [], bullets = [], gems = [], coinsArr = [], floatTexts = [], particles = [], destructibles = [], consumables = []; 
         let destructiblesDestroyed = 0, bossSpawned = false, currentBoss = null;
@@ -439,6 +439,7 @@
             if(ui) ui.classList.add('hidden'); 
         }
 
+        // 🛡️ 確保重置時回到標題畫面
         function enterMenu() { hideAllModals(); let m = document.getElementById('title-screen'); if(m) m.classList.remove('hidden'); gameState = 'menu'; updateMenuCoins(); }
         function backToMainMenu() { hideAllModals(); let m = document.getElementById('title-screen'); if(m) m.classList.remove('hidden'); gameState = 'menu'; updateMenuCoins(); }
         
@@ -480,6 +481,7 @@
             gameState = 'stage_select'; renderStageSelect(); 
         }
 
+        // 🛡️ 修復了被裁切的更新金幣函數
         function updateMenuCoins() { 
             safeUpdate('menu-coins', saveData.coins); 
             safeUpdate('shop-coins-display', saveData.coins); 
@@ -740,7 +742,7 @@
         window.addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); keys[e.code] = true; if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); if (e.code === 'Space') triggerDash(); });
         window.addEventListener('keyup', e => keys[e.code] = false);
         
-        // 觸控虛擬搖桿 (只在 canvas 上攔截，不影響按鈕)
+        // 觸控虛擬搖桿
         let isTouching = false, joystickOrigin = null, joystickCurrent = null, touchVector = { x: 0, y: 0 };
         canvas.addEventListener('touchstart', e => { e.preventDefault(); const touch = e.touches[0]; joystickOrigin = { x: touch.clientX, y: touch.clientY }; joystickCurrent = { x: touch.clientX, y: touch.clientY }; isTouching = true; touchVector = { x: 0, y: 0 }; }, {passive: false});
         canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!isTouching || !joystickOrigin) return; const touch = e.touches[0]; joystickCurrent = { x: touch.clientX, y: touch.clientY }; const dist = Math.hypot(joystickCurrent.x - joystickOrigin.x, joystickCurrent.y - joystickOrigin.y); if (dist > 5) { touchVector.x = (joystickCurrent.x - joystickOrigin.x) / dist; touchVector.y = (joystickCurrent.y - joystickOrigin.y) / dist; } }, {passive: false});
