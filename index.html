@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>星際倖存者：輓救行動</title>
+    <title>星際倖存者：輓救行動 (V4 完美架構版)</title>
     <style>
         * { box-sizing: border-box; -webkit-touch-callout: none; }
         body { 
@@ -49,7 +49,7 @@
         
         @keyframes pulseGlow { 0% { box-shadow: 0 0 5px #facc15; } 50% { box-shadow: 0 0 15px #fbbf24; } 100% { box-shadow: 0 0 5px #facc15; } }
 
-        /* 🌟 成就解鎖彈窗 */
+        /* 🌟 成就解鎖彈窗 (遊戲內) */
         #achievement-popup { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); background: #2e0909; border: 2px solid #facc15; border-radius: 8px; padding: 10px 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 0 #000; z-index: 100; transition: top 0.5s; pointer-events: none; }
         #achievement-popup.show { top: calc(30px + max(0px, env(safe-area-inset-top))); }
 
@@ -76,10 +76,10 @@
         .icon-btn { background: #0f172a; border: 2px solid #334155; color: white; font-size: 22px; width: 48px; height: 48px; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 8px; box-shadow: 0 4px 0 #020617; outline: none; }
         .icon-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #020617; }
 
-        /* 🌟 角色選擇專屬佈局 (完美對標影片) */
+        /* 🌟 角色選擇專屬佈局 */
         .char-select-layout { display: flex; flex-direction: column; height: calc(100% - 76px); }
         
-        .char-details-top { display: flex; flex-direction: column; padding: 20px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); border-bottom: 2px solid #450a0a; gap: 15px; flex-shrink: 0; }
+        .char-details-top { display: flex; flex-direction: column; padding: 15px 20px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); border-bottom: 2px solid #450a0a; gap: 12px; flex-shrink: 0; }
         .char-profile { display: flex; align-items: center; gap: 20px; }
         .char-sprite-large { font-size: 60px; width: 90px; height: 90px; background: #0f172a; border: 3px solid #facc15; display: flex; justify-content: center; align-items: center; border-radius: 12px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.5); text-shadow: 2px 2px 0 #000;}
         .char-info-text { flex: 1; }
@@ -88,15 +88,16 @@
         .char-info-text p { margin: 8px 0 0 0; font-size: 14px; color: #94a3b8; line-height: 1.5; text-shadow: 1px 1px 0 #000;}
         
         .char-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 15px; background: rgba(15,23,42,0.8); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 13px; border: 1px solid #334155; }
-        .stat-item-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #334155; padding: 4px 0; }
-        .stat-item-row:last-child, .stat-item-row:nth-last-child(2) { border-bottom: none; }
-        .stat-label { color: #94a3b8; }
-        .stat-value { color: #f8fafc; font-weight: bold; text-align: right; }
+        .stat-item-row { display: flex; justify-content: space-between; padding: 4px 10px; font-family: monospace; font-size: 14px; }
+        .stat-item-row:nth-child(odd) { background: rgba(255,255,255,0.05); }
+        .stat-label { color: #cbd5e1; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+        .stat-value { color: #facc15; font-weight: bold; text-shadow: 1px 1px 0 #000; }
         .stat-value.bonus { color: #4ade80; }
 
-        .char-grid-bottom { flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 15px; align-content: start; -webkit-overflow-scrolling: touch; }
-        .char-slot { background: #0f172a; border: 3px solid #334155; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 40px; cursor: pointer; transition: 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .char-slot.selected { border-color: #facc15; background: #450a0a; box-shadow: 0 0 20px rgba(250,204,21,0.4); transform: scale(1.05); }
+        /* 🌟 修復後的精緻角色網格 */
+        .char-grid-bottom { flex: 1; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.3); display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; align-content: start; -webkit-overflow-scrolling: touch; }
+        .char-slot { background: #0f172a; border: 2px solid #334155; border-radius: 6px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .char-slot.selected { border-color: #facc15; background: #450a0a; box-shadow: 0 0 15px rgba(250,204,21,0.5); transform: scale(1.05); }
 
         .bottom-action-bar { padding: 15px 20px; background: rgba(0,0,0,0.8); border-top: 2px solid #450a0a; display: flex; justify-content: center; flex-shrink: 0; }
         .bottom-action-bar .btn { max-width: 400px; font-size: 24px; padding: 15px; letter-spacing: 4px; margin-top: 0; }
@@ -157,8 +158,17 @@
             .vs-header { padding: 12px 15px; }
             .vs-header .title { font-size: 20px; }
             .icon-btn { width: 40px; height: 40px; font-size: 18px; }
+            
+            /* 🌟 手機版縮小角色選擇網格 */
+            .char-details-top { padding: 12px 15px; gap: 8px; }
             .char-sprite-large { font-size: 40px; width: 65px; height: 65px; }
             .char-info-text h2 { font-size: 22px; }
+            .char-stats-grid { font-size: 12px; padding: 6px; }
+            .stat-item-row { padding: 3px 6px; }
+            
+            .char-grid-bottom { padding: 10px; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
+            .char-slot { font-size: 26px; border-width: 2px; border-radius: 6px; }
+            
             .chest-img { font-size: 80px; }
         }
     </style>
@@ -167,6 +177,7 @@
 
     <!-- 遊戲進行中 UI -->
     <div id="game-ui" class="overlay hidden">
+        <!-- 🌟 成就解鎖彈窗 -->
         <div id="achievement-popup">
             <div style="font-size: 30px;">🏆</div>
             <div>
@@ -230,7 +241,9 @@
                 </div>
                 <div class="char-stats-grid" id="char-stats"></div>
             </div>
+            <!-- 🌟 小巧緊湊的角色網格 -->
             <div class="char-grid-bottom" id="char-grid"></div>
+            
             <div class="bottom-action-bar">
                 <button class="btn btn-green" onclick="goToStageSelect()">確認</button>
             </div>
@@ -246,6 +259,7 @@
         </div>
         <div class="stage-list-container" id="stage-list"></div>
         <div class="bottom-action-bar">
+            <!-- 🌟 直接開始遊戲，無任何拖泥帶水 -->
             <button class="btn btn-green" onclick="startGame()">開始出擊</button>
         </div>
     </div>
@@ -343,7 +357,7 @@
         // 🛡️ 終極存檔保險箱 (絕對防當機)
         let saveData = { coins: 0, upgrades: {}, achievements: [] };
         try {
-            const stored = localStorage.getItem('spaceSurvivorsSave_v431');
+            const stored = localStorage.getItem('spaceSurvivorsSave_v5');
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (parsed.coins !== undefined) saveData.coins = parseInt(parsed.coins) || 0;
@@ -353,11 +367,11 @@
         } catch(e) { console.error("存檔損毀，已重置"); }
         
         function saveGame() { 
-            localStorage.setItem('spaceSurvivorsSave_v431', JSON.stringify(saveData)); 
+            localStorage.setItem('spaceSurvivorsSave_v5', JSON.stringify(saveData)); 
             updateMenuCoins(); 
         }
 
-        // ====== 核心全域變數 (修復 ReferenceError) ======
+        // ====== 核心全域變數 ======
         let selectedCharIndex = 0;
         let selectedStageIndex = 0;
         
@@ -439,7 +453,6 @@
             if(ui) ui.classList.add('hidden'); 
         }
 
-        // 🛡️ 確保重置時回到標題畫面
         function enterMenu() { hideAllModals(); let m = document.getElementById('title-screen'); if(m) m.classList.remove('hidden'); gameState = 'menu'; updateMenuCoins(); }
         function backToMainMenu() { hideAllModals(); let m = document.getElementById('title-screen'); if(m) m.classList.remove('hidden'); gameState = 'menu'; updateMenuCoins(); }
         
@@ -481,7 +494,6 @@
             gameState = 'stage_select'; renderStageSelect(); 
         }
 
-        // 🛡️ 修復了被裁切的更新金幣函數
         function updateMenuCoins() { 
             safeUpdate('menu-coins', saveData.coins); 
             safeUpdate('shop-coins-display', saveData.coins); 
@@ -742,7 +754,7 @@
         window.addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); keys[e.code] = true; if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); if (e.code === 'Space') triggerDash(); });
         window.addEventListener('keyup', e => keys[e.code] = false);
         
-        // 觸控虛擬搖桿
+        // 觸控虛擬搖桿 (只在 canvas 上攔截，不影響按鈕)
         let isTouching = false, joystickOrigin = null, joystickCurrent = null, touchVector = { x: 0, y: 0 };
         canvas.addEventListener('touchstart', e => { e.preventDefault(); const touch = e.touches[0]; joystickOrigin = { x: touch.clientX, y: touch.clientY }; joystickCurrent = { x: touch.clientX, y: touch.clientY }; isTouching = true; touchVector = { x: 0, y: 0 }; }, {passive: false});
         canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!isTouching || !joystickOrigin) return; const touch = e.touches[0]; joystickCurrent = { x: touch.clientX, y: touch.clientY }; const dist = Math.hypot(joystickCurrent.x - joystickOrigin.x, joystickCurrent.y - joystickOrigin.y); if (dist > 5) { touchVector.x = (joystickCurrent.x - joystickOrigin.x) / dist; touchVector.y = (joystickCurrent.y - joystickOrigin.y) / dist; } }, {passive: false});
