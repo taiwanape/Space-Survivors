@@ -3,190 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>星際倖存者：輓救行動 (V4 完美架構版)</title>
+    <title>星際倖存者：輓救行動 (全裝置適配版)</title>
     <style>
-        * { box-sizing: border-box; -webkit-touch-callout: none; }
+        /* 🍏 基礎重置與全域安全區域設定 */
+        * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         body { 
-            margin: 0; padding: 0; background: #1a0505; /* VS風格暗紅 */ 
+            margin: 0; padding: 0; background: #1a0505; 
             overflow: hidden; color: #f8fafc; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            touch-action: none; overscroll-behavior: none; user-select: none; -webkit-user-select: none; 
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; 
+            touch-action: none; overscroll-behavior: none; 
             width: 100vw; 
-            height: 100vh; /* 舊版 iOS 備用 */
-            height: 100dvh; /* 新版 iOS 完美高度 */
+            height: 100vh; /* 舊版 iOS fallback */
+            height: 100dvh; /* 動態視口高度，完美貼合 iOS Safari */
         }
         canvas { display: block; width: 100%; height: 100%; touch-action: none; }
         
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; display: flex; flex-direction: column; pointer-events: none; z-index: 5; }
+        /* 覆蓋層與模態視窗共用 */
+        .overlay, .modal { 
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; 
+            display: flex; flex-direction: column; z-index: 20; 
+            /* 🛡️ Apple 全系列 Safe Area 完美避讓 */
+            padding: max(0px, env(safe-area-inset-top)) max(0px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(0px, env(safe-area-inset-left));
+        }
+        .overlay { z-index: 5; pointer-events: none; padding-bottom: 0; padding-top: 0; }
+        .modal { background: #1a0505; background-image: radial-gradient(circle at center, #2e0909 0%, #0a0202 100%); pointer-events: auto; }
         .hidden { display: none !important; }
         
-        button { touch-action: manipulation; outline: none; }
+        button { touch-action: manipulation; outline: none; border: none; font-family: inherit; margin: 0; }
         
-        /* 基礎按鈕樣式 */
-        .btn { padding: 15px 20px; font-size: 18px; background: #0f172a; color: #f8fafc; border: 2px solid #334155; border-radius: 4px; cursor: pointer; font-weight: bold; letter-spacing: 1px; pointer-events: auto; text-shadow: 2px 2px 0px #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 0 #020617; transition: all 0.1s; text-transform: uppercase; }
-        .btn:active { transform: translateY(4px); box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 0 #020617; }
-        .btn:hover { border-color: #facc15; color: #facc15; }
+        /* 🌊 流體按鈕樣式 (根據螢幕比例自動調整大小) */
+        .btn { 
+            padding: clamp(10px, 2.5vh, 20px) clamp(15px, 4vw, 30px); 
+            font-size: clamp(16px, 4vmin, 24px); 
+            background: #0f172a; color: #f8fafc; 
+            border: 2px solid #1e293b; border-bottom: clamp(2px, 1vh, 6px) solid #020617; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; letter-spacing: clamp(1px, 0.5vw, 4px); pointer-events: auto; 
+            text-shadow: 2px 2px 0px #000; box-shadow: 0 4px 6px rgba(0,0,0,0.5); 
+            transition: all 0.1s; text-transform: uppercase; width: 100%;
+        }
+        .btn:active { transform: translateY(clamp(2px, 0.5vh, 4px)); border-bottom-width: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.8); }
         
-        .btn-green { background: #064e3b; border-color: #047857; box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 0 #022c22; }
-        .btn-green:hover { border-color: #34d399; color: #34d399; }
-        .btn.danger { background: #7f1d1d; border-color: #991b1b; box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 0 #450a0a; }
-        .btn.danger:hover { border-color: #f87171; color: #f87171; }
-        .btn:disabled { background: #1e293b; border-color: #334155; box-shadow: 0 4px 0 #0f172a; transform: none; cursor: not-allowed; color: #64748b; }
+        .btn-green { background: #064e3b; border-color: #047857; border-bottom-color: #022c22; }
+        .btn-blue { background: #1e3a8a; border-color: #2563eb; border-bottom-color: #172554; }
+        .btn-yellow { background: #b45309; border-color: #d97706; border-bottom-color: #78350f; }
+        .btn.danger { background: #7f1d1d; border-color: #b91c1c; border-bottom-color: #450a0a; }
+        .btn:disabled { background: #1e293b; border-color: #334155; border-bottom-color: #0f172a; color: #64748b; cursor: not-allowed; transform: none; border-bottom-width: clamp(2px, 1vh, 6px); }
         
-        /* === 遊戲內 HUD === */
-        .top-exp-bar { position: absolute; top: env(safe-area-inset-top, 0px); left: 0; width: 100%; height: 14px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #1e293b; z-index: 10; pointer-events: none; margin-top: max(0px, env(safe-area-inset-top)); }
+        /* === 遊戲內 HUD (流體化) === */
+        .top-exp-bar { position: absolute; top: max(0px, env(safe-area-inset-top)); left: 0; width: 100%; height: clamp(8px, 2vh, 16px); background: rgba(0,0,0,0.9); border-bottom: 2px solid #1e293b; z-index: 10; pointer-events: none; }
         #exp-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #60a5fa, #93c5fd); width: 0%; transition: width 0.2s ease-out; box-shadow: 0 0 10px #3b82f6; }
         
-        .hud-container { position: absolute; top: calc(20px + max(0px, env(safe-area-inset-top))); left: 0; width: 100%; display: flex; justify-content: space-between; padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); box-sizing: border-box; pointer-events: none; z-index: 9; }
+        .hud-container { position: absolute; top: calc(clamp(15px, 3vh, 25px) + max(0px, env(safe-area-inset-top))); left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); box-sizing: border-box; pointer-events: none; z-index: 9; }
         
-        .inventory-container { display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
-        .inv-row { display: flex; gap: 2px; }
-        .weapon-slot { width: 30px; height: 30px; background: rgba(0, 0, 0, 0.7); border: 2px solid #334155; display: flex; justify-content: center; align-items: center; font-size: 16px; position: relative; }
+        .inventory-container { display: flex; flex-direction: column; gap: clamp(2px, 0.8vh, 6px); pointer-events: none; }
+        .inv-row { display: flex; gap: clamp(2px, 0.5vw, 4px); }
+        .weapon-slot { width: clamp(24px, 7vmin, 40px); height: clamp(24px, 7vmin, 40px); background: rgba(0, 0, 0, 0.7); border: clamp(1px, 0.3vmin, 3px) solid #334155; border-radius: 4px; display: flex; justify-content: center; align-items: center; font-size: clamp(12px, 3.5vmin, 20px); position: relative; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
         .weapon-slot.empty { border-color: #1e293b; background: rgba(0,0,0,0.4); opacity: 0.5; }
         .weapon-slot.passive { border-radius: 50%; } 
-        .weapon-slot .lvl-badge { position: absolute; bottom: -4px; right: -4px; background: #0ea5e9; color: white; font-size: 9px; font-weight: 900; padding: 1px 3px; border-radius: 2px; border: 1px solid #000; font-family: monospace; }
-        .weapon-slot.evolved { border-color: #facc15 !important; box-shadow: 0 0 10px #facc15, inset 0 0 10px rgba(250,204,21,0.3) !important; animation: pulseGlow 2s infinite; }
+        .weapon-slot .lvl-badge { position: absolute; bottom: -4px; right: -4px; background: #0ea5e9; color: white; font-size: clamp(8px, 2vmin, 12px); font-weight: 900; padding: 1px 4px; border-radius: 3px; border: 1px solid #000; font-family: monospace; }
+        .weapon-slot.evolved { border-color: #facc15 !important; box-shadow: 0 0 10px #facc15 !important; animation: pulseGlow 2s infinite; }
         
-        @keyframes pulseGlow { 0% { box-shadow: 0 0 5px #facc15; } 50% { box-shadow: 0 0 15px #fbbf24; } 100% { box-shadow: 0 0 5px #facc15; } }
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 5px #facc15; } 50% { box-shadow: 0 0 15px #fbbf24; } }
 
-        /* 🌟 成就解鎖彈窗 (遊戲內) */
-        #achievement-popup { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); background: #2e0909; border: 2px solid #facc15; border-radius: 8px; padding: 10px 20px; display: flex; align-items: center; gap: 15px; box-shadow: 0 4px 0 #000; z-index: 100; transition: top 0.5s; pointer-events: none; }
-        #achievement-popup.show { top: calc(30px + max(0px, env(safe-area-inset-top))); }
+        /* 成就彈窗 */
+        #achievement-popup { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); background: #2e0909; border: 2px solid #facc15; border-radius: 8px; padding: clamp(5px, 1.5vh, 15px) clamp(15px, 4vw, 30px); display: flex; align-items: center; gap: clamp(10px, 3vw, 20px); box-shadow: 0 4px 10px rgba(0,0,0,0.8); z-index: 100; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; width: max-content; max-width: 90vw; }
+        #achievement-popup.show { top: calc(clamp(30px, 5vh, 50px) + max(0px, env(safe-area-inset-top))); }
 
         .timer-container { text-align: center; pointer-events: auto; }
-        .time-display { font-size: 32px; color: #f8fafc; text-shadow: 2px 2px 0px #000, 0 0 10px #000; font-family: monospace; font-weight: bold; letter-spacing: 1px; }
+        .time-display { font-size: clamp(28px, 8vmin, 48px); color: #f8fafc; text-shadow: 3px 3px 0px #000, 0 0 10px #000; font-family: monospace; font-weight: bold; letter-spacing: 2px; line-height: 1; }
         .time-display.boss { color: #f87171; animation: blink 1s infinite; }
 
-        .stats-container { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; font-size: 16px; font-weight: bold; text-shadow: 2px 2px 0px #000; font-family: monospace; }
+        .stats-container { display: flex; flex-direction: column; align-items: flex-end; gap: clamp(2px, 1vh, 6px); font-size: clamp(12px, 3.5vmin, 20px); font-weight: bold; text-shadow: 2px 2px 0px #000; font-family: monospace; line-height: 1.2; }
         
-        #pause-btn-ingame { background: rgba(0, 0, 0, 0.7); border: 2px solid #334155; color: #e2e8f0; font-size: 16px; border-radius: 4px; padding: 6px 12px; cursor: pointer; pointer-events: auto; margin-top: 5px; text-shadow: 1px 1px 0 #000; }
+        #pause-btn-ingame { background: rgba(0, 0, 0, 0.8); border: 2px solid #334155; color: #e2e8f0; font-size: clamp(12px, 3.5vmin, 18px); border-radius: 6px; padding: clamp(4px, 1vh, 8px) clamp(8px, 2vw, 16px); cursor: pointer; pointer-events: auto; margin-top: 5px; box-shadow: 0 3px 0 #0f172a; }
+        #pause-btn-ingame:active { transform: translateY(3px); box-shadow: 0 0 0 #0f172a; }
         
-        #dash-btn { position: absolute; bottom: calc(30px + max(0px, env(safe-area-inset-bottom))); right: calc(30px + max(0px, env(safe-area-inset-right))); background: rgba(139, 92, 246, 0.6); border: 2px solid #a78bfa; color: white; font-size: 16px; font-weight: bold; border-radius: 50%; width: 70px; height: 70px; cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; transition: all 0.2s; box-shadow: 0 0 15px rgba(139, 92, 246, 0.5); z-index: 10;}
+        #dash-btn { position: absolute; bottom: calc(clamp(20px, 5vh, 40px) + max(0px, env(safe-area-inset-bottom))); right: calc(clamp(20px, 5vw, 40px) + max(0px, env(safe-area-inset-right))); background: rgba(139, 92, 246, 0.7); border: clamp(2px, 0.5vmin, 4px) solid #a78bfa; color: white; font-size: clamp(12px, 3.5vmin, 20px); font-weight: bold; border-radius: 50%; width: clamp(60px, 16vmin, 90px); height: clamp(60px, 16vmin, 90px); cursor: pointer; pointer-events: auto; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(139, 92, 246, 0.6); z-index: 10; text-shadow: 1px 1px 0 #000; transition: transform 0.1s;}
         #dash-btn:active { transform: scale(0.9); }
-        #dash-btn.cooldown { background: rgba(0, 0, 0, 0.6); border-color: #334155; color: #64748b; box-shadow: none; }
+        #dash-btn.cooldown { background: rgba(0, 0, 0, 0.6); border-color: #334155; color: #64748b; box-shadow: none; text-shadow: none;}
         
         #radiation-warning { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(239,68,68,0) 50%, rgba(239,68,68,0.4) 100%); pointer-events: none; z-index: 8; opacity: 0; transition: opacity 0.3s; display: flex; justify-content: center; align-items: center; }
 
-        /* === VS 風格選單系統 === */
-        .modal { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: #1a0505; background-image: radial-gradient(circle at center, #2e0909 0%, #0a0202 100%); pointer-events: auto; display: flex; flex-direction: column; z-index: 20; padding: max(0px, env(safe-area-inset-top)) max(0px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(0px, env(safe-area-inset-left)); }
-        
-        .vs-header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(0,0,0,0.6); border-bottom: 2px solid #450a0a; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .vs-header .title { font-size: 26px; font-weight: 900; color: #facc15; text-shadow: 2px 2px 0 #000; letter-spacing: 2px; margin: 0; }
-        .vs-header .coin-display { font-size: 22px; font-weight: bold; color: #facc15; text-shadow: 2px 2px 0 #000; display: flex; align-items: center; gap: 5px;}
-        .icon-btn { background: #0f172a; border: 2px solid #334155; color: white; font-size: 22px; width: 48px; height: 48px; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 8px; box-shadow: 0 4px 0 #020617; outline: none; }
+        /* === VS 風格選單 Header === */
+        .vs-header { display: flex; justify-content: space-between; align-items: center; padding: clamp(10px, 2vh, 20px) clamp(15px, 4vw, 30px); background: rgba(0,0,0,0.6); border-bottom: 2px solid #450a0a; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .vs-header .title { font-size: clamp(20px, 6vmin, 32px); font-weight: 900; color: #facc15; text-shadow: 2px 2px 0 #000; letter-spacing: 2px; margin: 0; }
+        .vs-header .coin-display { font-size: clamp(16px, 5vmin, 26px); font-weight: bold; color: #facc15; text-shadow: 2px 2px 0 #000; display: flex; align-items: center; gap: 5px;}
+        .icon-btn { background: #0f172a; border: 2px solid #334155; color: white; font-size: clamp(16px, 5vmin, 24px); width: clamp(40px, 10vmin, 55px); height: clamp(40px, 10vmin, 55px); display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 8px; box-shadow: 0 4px 0 #020617; }
         .icon-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #020617; }
 
-        /* 🌟 角色選擇專屬佈局 */
-        .char-select-layout { display: flex; flex-direction: column; height: calc(100% - 76px); }
+        /* 🌟 角色選擇專屬佈局 (完全流體化，不硬性扣除高度) */
+        .char-select-layout { flex: 1; display: flex; flex-direction: column; min-height: 0; } /* min-height: 0 是 Flexbox 內部滾動關鍵 */
         
-        .char-details-top { display: flex; flex-direction: column; padding: 15px 20px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); border-bottom: 2px solid #450a0a; gap: 12px; flex-shrink: 0; }
-        .char-profile { display: flex; align-items: center; gap: 20px; }
-        .char-sprite-large { font-size: 60px; width: 90px; height: 90px; background: #0f172a; border: 3px solid #facc15; display: flex; justify-content: center; align-items: center; border-radius: 12px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.5); text-shadow: 2px 2px 0 #000;}
-        .char-info-text { flex: 1; }
-        .char-info-text h2 { margin: 0 0 5px 0; color: #f8fafc; font-size: 28px; text-shadow: 2px 2px 0 #000; letter-spacing: 1px; }
-        .char-weapon-info { display: inline-block; background: #1e293b; border: 1px solid #475569; padding: 4px 10px; border-radius: 4px; font-size: 14px; font-weight: bold; color: #cbd5e1; margin-top: 5px; box-shadow: 0 2px 0 #0f172a;}
-        .char-info-text p { margin: 8px 0 0 0; font-size: 14px; color: #94a3b8; line-height: 1.5; text-shadow: 1px 1px 0 #000;}
+        .char-details-top { display: flex; flex-direction: column; padding: clamp(10px, 2.5vh, 25px) clamp(15px, 4vw, 30px); background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); border-bottom: 2px solid #450a0a; gap: clamp(8px, 2vh, 15px); flex-shrink: 0; }
+        .char-profile { display: flex; align-items: center; gap: clamp(15px, 4vw, 25px); }
+        .char-sprite-large { font-size: clamp(40px, 12vmin, 70px); width: clamp(65px, 18vmin, 110px); height: clamp(65px, 18vmin, 110px); background: #0f172a; border: clamp(2px, 0.5vmin, 4px) solid #facc15; display: flex; justify-content: center; align-items: center; border-radius: 12px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 4px 10px rgba(0,0,0,0.5); text-shadow: 2px 2px 0 #000; flex-shrink: 0;}
+        .char-info-text { flex: 1; min-width: 0; /* 防止文字撐破容器 */ }
+        .char-info-text h2 { margin: 0 0 4px 0; color: #f8fafc; font-size: clamp(20px, 6vmin, 36px); text-shadow: 2px 2px 0 #000; letter-spacing: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .char-weapon-info { display: inline-block; background: #1e293b; border: 1px solid #475569; padding: 4px 8px; border-radius: 4px; font-size: clamp(11px, 3vmin, 16px); font-weight: bold; color: #cbd5e1; margin-top: 2px; box-shadow: 0 2px 0 #0f172a;}
+        .char-info-text p { margin: clamp(4px, 1vh, 10px) 0 0 0; font-size: clamp(11px, 3vmin, 16px); color: #94a3b8; line-height: 1.4; text-shadow: 1px 1px 0 #000;}
         
-        .char-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 15px; background: rgba(15,23,42,0.8); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 13px; border: 1px solid #334155; }
-        .stat-item-row { display: flex; justify-content: space-between; padding: 4px 10px; font-family: monospace; font-size: 14px; }
-        .stat-item-row:nth-child(odd) { background: rgba(255,255,255,0.05); }
-        .stat-label { color: #cbd5e1; font-weight: bold; text-shadow: 1px 1px 0 #000; }
-        .stat-value { color: #facc15; font-weight: bold; text-shadow: 1px 1px 0 #000; }
+        .char-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2px, 0.5vh, 6px) clamp(10px, 3vw, 25px); background: rgba(15,23,42,0.8); padding: clamp(6px, 1.5vh, 15px); border-radius: 8px; font-family: monospace; font-size: clamp(11px, 3vmin, 16px); border: 1px solid #334155; }
+        .stat-item-row { display: flex; justify-content: space-between; padding: clamp(2px, 0.5vh, 6px) clamp(4px, 1vw, 10px); }
+        .stat-item-row:nth-child(odd) { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .stat-label { color: #cbd5e1; font-weight: bold; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
+        .stat-value { color: #facc15; font-weight: bold; text-shadow: 1px 1px 0 #000; white-space: nowrap; }
         .stat-value.bonus { color: #4ade80; }
 
-        /* 🌟 修復後的精緻角色網格 */
-        .char-grid-bottom { flex: 1; overflow-y: auto; padding: 15px; background: rgba(0,0,0,0.3); display: grid; grid-template-columns: repeat(auto-fill, minmax(55px, 1fr)); gap: 8px; align-content: start; -webkit-overflow-scrolling: touch; }
-        .char-slot { background: #0f172a; border: 2px solid #334155; border-radius: 6px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: 32px; cursor: pointer; transition: 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        .char-slot.selected { border-color: #facc15; background: #450a0a; box-shadow: 0 0 15px rgba(250,204,21,0.5); transform: scale(1.05); }
+        /* 🌟 角色網格底層：自適應寬度，填滿剩餘空間 */
+        .char-grid-bottom { flex: 1; overflow-y: auto; padding: clamp(15px, 4vw, 30px); display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(50px, 14vw, 85px), 1fr)); gap: clamp(8px, 2vw, 20px); align-content: start; -webkit-overflow-scrolling: touch; }
+        .char-slot { background: #0f172a; border: clamp(2px, 0.5vmin, 4px) solid #334155; border-radius: 8px; aspect-ratio: 1; display: flex; justify-content: center; align-items: center; font-size: clamp(28px, 8vmin, 50px); cursor: pointer; transition: transform 0.1s, border-color 0.1s; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .char-slot.selected { border-color: #facc15; background: #450a0a; box-shadow: 0 0 20px rgba(250,204,21,0.5); transform: scale(1.05); }
 
-        .bottom-action-bar { padding: 15px 20px; background: rgba(0,0,0,0.8); border-top: 2px solid #450a0a; display: flex; justify-content: center; flex-shrink: 0; }
-        .bottom-action-bar .btn { max-width: 400px; font-size: 24px; padding: 15px; letter-spacing: 4px; margin-top: 0; }
+        .bottom-action-bar { padding: clamp(10px, 2vh, 20px) clamp(15px, 4vw, 30px); background: rgba(0,0,0,0.8); border-top: 2px solid #450a0a; display: flex; justify-content: center; flex-shrink: 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); padding-bottom: max(clamp(10px, 2vh, 20px), env(safe-area-inset-bottom)); }
+        .bottom-action-bar .btn { max-width: 500px; font-size: clamp(20px, 5vmin, 28px); padding: clamp(12px, 2.5vh, 20px); letter-spacing: 4px; width: 100%; }
 
         /* 關卡選擇佈局 */
-        .stage-list-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; -webkit-overflow-scrolling: touch; align-items: center; }
-        .stage-card { background: #0f172a; border: 2px solid #334155; border-radius: 8px; padding: 20px; cursor: pointer; display: flex; flex-direction: column; transition: 0.1s; width: 100%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .stage-list-container { flex: 1; overflow-y: auto; padding: clamp(15px, 4vw, 30px); display: flex; flex-direction: column; gap: clamp(12px, 3vh, 25px); -webkit-overflow-scrolling: touch; align-items: center; }
+        .stage-card { background: #0f172a; border: clamp(2px, 0.5vmin, 4px) solid #334155; border-radius: 12px; padding: clamp(15px, 3vh, 30px); cursor: pointer; display: flex; flex-direction: column; transition: transform 0.1s; width: 100%; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .stage-card.selected { border-color: #facc15; background: #450a0a; box-shadow: 0 0 20px rgba(250,204,21,0.3); transform: translateX(5px); }
-        .stage-card h3 { margin: 0 0 8px 0; font-size: 24px; color: #f8fafc; text-shadow: 2px 2px 0 #000; }
-        .stage-card p { margin: 0; font-size: 15px; color: #cbd5e1; line-height: 1.5; }
-        .stage-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .stage-card h3 { margin: 0 0 8px 0; font-size: clamp(20px, 5.5vmin, 30px); color: #f8fafc; text-shadow: 2px 2px 0 #000; }
+        .stage-card p { margin: 0; font-size: clamp(12px, 3.5vmin, 16px); color: #cbd5e1; line-height: 1.5; }
+        .stage-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); transform: none; }
 
         /* 標題畫面 */
         .title-screen-layout { align-items: center; justify-content: center; text-align: center; }
-        .mega-title { font-size: 64px; color: #facc15; text-shadow: 4px 4px 0 #9f1239, 0 0 40px rgba(250,204,21,0.5); letter-spacing: 4px; font-weight: 900; margin: 0; line-height: 1.1; }
-        .sub-title { font-size: 22px; color: #e2e8f0; letter-spacing: 10px; margin-top: 15px; margin-bottom: 60px; text-shadow: 2px 2px 0 #000; }
-        .main-menu-btns { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 320px; padding: 0 20px; }
-        .main-menu-btns .btn { padding: 18px; font-size: 20px; margin-top: 0; }
+        .mega-title { font-size: clamp(40px, 12vw, 80px); color: #facc15; text-shadow: clamp(3px, 1vw, 6px) clamp(3px, 1vw, 6px) 0 #9f1239, 0 0 40px rgba(250,204,21,0.5); letter-spacing: clamp(2px, 1vw, 6px); font-weight: 900; margin: 0; line-height: 1.1; }
+        .sub-title { font-size: clamp(16px, 5vw, 28px); color: #e2e8f0; letter-spacing: clamp(6px, 2vw, 12px); margin-top: 15px; margin-bottom: clamp(40px, 10vh, 80px); text-shadow: 2px 2px 0 #000; }
+        .main-menu-btns { display: flex; flex-direction: column; gap: clamp(15px, 3vh, 25px); width: 100%; max-width: 400px; padding: 0 20px; }
+        
+        /* 通用選單容器 (Shop, Ach, Cards) */
+        .general-list-container { flex: 1; overflow-y: auto; padding: clamp(15px, 4vw, 30px); display: flex; flex-direction: column; gap: clamp(10px, 2.5vh, 20px); align-items: center; -webkit-overflow-scrolling: touch; }
 
-        /* 升級/寶箱選單 */
-        .upgrade-cards { display: flex; flex-direction: column; gap: 15px; padding: 20px; flex: 1; overflow-y: auto; justify-content: center; -webkit-overflow-scrolling: touch; }
-        .card { background: #0f172a; border: 2px solid #334155; border-radius: 4px; padding: 12px; width: 100%; max-width: 500px; margin: 0 auto; cursor: pointer; display: flex; align-items: center; gap: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 6px 0 #020617; }
+        .card { background: #0f172a; border: clamp(2px, 0.5vmin, 4px) solid #334155; border-radius: 8px; padding: clamp(12px, 2.5vh, 20px); width: 100%; max-width: 600px; margin: 0 auto; cursor: pointer; display: flex; align-items: center; gap: clamp(12px, 3vw, 25px); box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 6px 0 #020617; }
         .card:active { transform: translateY(6px); box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 0 0 #020617; }
-        .card-icon { font-size: 40px; width: 50px; text-align: center; text-shadow: 2px 2px 0 #000; }
+        .card-icon { font-size: clamp(32px, 8vmin, 48px); width: clamp(40px, 10vmin, 60px); text-align: center; text-shadow: 2px 2px 0 #000; flex-shrink: 0; }
         .card-content { flex: 1; text-align: left; }
-        .card h3 { margin: 0 0 6px 0; color: #f8fafc; font-size: 18px; font-weight: 900; text-shadow: 1px 1px 0 #000; display: block; }
-        .card p { margin: 0; font-size: 12px; color: #94a3b8; line-height: 1.4; }
-        .tag { font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #334155; color: #e2e8f0; float: right; margin-left: 5px; box-shadow: 0 2px 0 #0f172a; }
+        .card h3 { margin: 0 0 6px 0; color: #f8fafc; font-size: clamp(16px, 4.5vmin, 22px); font-weight: 900; text-shadow: 1px 1px 0 #000; display: block; }
+        .card p { margin: 0; font-size: clamp(12px, 3vmin, 15px); color: #94a3b8; line-height: 1.4; }
+        .tag { font-size: clamp(10px, 2.5vmin, 13px); padding: 2px 6px; border-radius: 4px; background: #334155; color: #e2e8f0; float: right; margin-left: 5px; box-shadow: 0 2px 0 #0f172a; }
         .tag.new { background: #b45309; color: #fde047; }
         .tag.evo-tag { background: #9f1239; color: #fbcfe8; }
 
         /* 圖鑑成就 UI */
-        .ach-list { display: flex; flex-direction: column; gap: 12px; text-align: left; padding: 20px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; align-items: center;}
-        .ach-item { display: flex; gap: 15px; background: #0f172a; border: 2px solid #334155; border-radius: 8px; padding: 15px; align-items: center; opacity: 0.6; filter: grayscale(1); width: 100%; max-width: 500px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
+        .ach-item { display: flex; gap: clamp(12px, 3vw, 20px); background: #0f172a; border: clamp(2px, 0.5vmin, 3px) solid #334155; border-radius: 12px; padding: clamp(12px, 2.5vh, 20px); align-items: center; opacity: 0.6; filter: grayscale(1); width: 100%; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
         .ach-item.unlocked { opacity: 1; filter: grayscale(0); border-color: #facc15; background: #2e0909; }
-        .ach-item-icon { font-size: 36px; width: 45px; text-align: center; text-shadow: 2px 2px 0 #000;}
+        .ach-item-icon { font-size: clamp(32px, 8vmin, 45px); width: clamp(40px, 10vmin, 60px); text-align: center; text-shadow: 2px 2px 0 #000; flex-shrink: 0;}
         .ach-item-content { flex: 1; }
-        .ach-item h3 { margin: 0 0 6px 0; color: #f8fafc; font-size: 18px; text-shadow: 1px 1px 0 #000;}
-        .ach-item p { margin: 0; font-size: 14px; color: #94a3b8; line-height: 1.4; }
-        .ach-reward { font-size: 12px; color: #facc15; font-weight: bold; margin-top: 8px; display: inline-block; text-shadow: 1px 1px 0 #000; }
+        .ach-item h3 { margin: 0 0 6px 0; color: #f8fafc; font-size: clamp(16px, 4.5vmin, 20px); text-shadow: 1px 1px 0 #000;}
+        .ach-item p { margin: 0; font-size: clamp(12px, 3vmin, 15px); color: #94a3b8; line-height: 1.4; }
+        .ach-reward { font-size: clamp(10px, 2.5vmin, 13px); color: #facc15; font-weight: bold; margin-top: 8px; display: inline-block; text-shadow: 1px 1px 0 #000; }
 
         /* 動畫效果 */
-        .chest-img { font-size: 120px; text-shadow: 0 0 50px rgba(250,204,21,0.8); cursor: pointer; margin: 50px 0; display: inline-block;}
+        .chest-img { font-size: clamp(80px, 25vmin, 150px); text-shadow: 0 0 50px rgba(250,204,21,0.8); cursor: pointer; margin: clamp(30px, 8vh, 60px) 0; display: inline-block;}
         @keyframes shake { 0% { transform: translate(2px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-2deg); } 20% { transform: translate(-3px, 0px) rotate(2deg); } 30% { transform: translate(0px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(2deg); } 50% { transform: translate(-1px, 2px) rotate(-2deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(2px, 1px) rotate(-2deg); } 80% { transform: translate(-1px, -1px) rotate(2deg); } 90% { transform: translate(2px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-2deg); } }
         .opening { animation: shake 0.4s infinite; }
-        .blinking-text { font-size: 16px; color: #facc15; animation: blink 1.5s infinite; letter-spacing: 2px; font-weight: bold; }
+        .blinking-text { font-size: clamp(14px, 4vw, 20px); color: #fca5a5; animation: blink 1.5s infinite; letter-spacing: 2px; font-weight: bold; text-shadow: 2px 2px 0 #000; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        @media (max-width: 768px) {
-            .char-select-layout { height: calc(100% - 66px); }
-            .mega-title { font-size: 46px; letter-spacing: 2px; }
-            .time-display { font-size: 28px; }
-            .stats-container { font-size: 14px; }
-            .weapon-slot { width: 28px; height: 28px; font-size: 14px; border-width: 1px; }
-            .weapon-slot .lvl-badge { font-size: 8px; padding: 1px 2px; bottom: -3px; right: -3px; }
-            #dash-btn { width: 65px; height: 65px; font-size: 14px; }
-            #pause-btn-ingame { font-size: 14px; padding: 6px 10px; }
-            .vs-header { padding: 12px 15px; }
-            .vs-header .title { font-size: 20px; }
-            .icon-btn { width: 40px; height: 40px; font-size: 18px; }
-            
-            /* 🌟 手機版縮小角色選擇網格 */
-            .char-details-top { padding: 12px 15px; gap: 8px; }
-            .char-sprite-large { font-size: 40px; width: 65px; height: 65px; }
-            .char-info-text h2 { font-size: 22px; }
-            .char-stats-grid { font-size: 12px; padding: 6px; }
-            .stat-item-row { padding: 3px 6px; }
-            
-            .char-grid-bottom { padding: 10px; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
-            .char-slot { font-size: 26px; border-width: 2px; border-radius: 6px; }
-            
-            .chest-img { font-size: 80px; }
-        }
+        /* 寶箱與暫停彈窗小微調 */
+        .popup-box-inner { background: #0f172a; border: 2px solid #334155; border-radius: 8px; padding: clamp(15px, 3vh, 25px); width: 90%; max-width: 400px; margin: 20px auto; box-shadow: 0 6px 0 #000; }
+        .chest-reward-box { border-color: #facc15; }
+
     </style>
 </head>
 <body>
 
     <!-- 遊戲進行中 UI -->
     <div id="game-ui" class="overlay hidden">
-        <!-- 🌟 成就解鎖彈窗 -->
         <div id="achievement-popup">
-            <div style="font-size: 30px;">🏆</div>
+            <div style="font-size: clamp(24px, 6vw, 36px);">🏆</div>
             <div>
-                <h4 style="margin: 0; color: #facc15; font-size: 12px;">成就解鎖</h4>
-                <p id="ach-popup-title" style="margin: 2px 0 0 0; color: #fff; font-size: 16px; font-weight: bold;">---</p>
+                <h4 style="margin: 0; color: #facc15; font-size: clamp(10px, 3vw, 14px);">成就解鎖</h4>
+                <p id="ach-popup-title" style="margin: 2px 0 0 0; color: #fff; font-size: clamp(14px, 4vw, 18px); font-weight: bold;">---</p>
             </div>
         </div>
 
-        <div id="radiation-warning"><div style="color: #fca5a5; font-size: 20px; font-weight: bold; margin-top: 150px; animation: blink 1s infinite; text-shadow: 2px 2px 0 #000;">⚠️ 輻射濃度過高 ⚠️</div></div>
+        <div id="radiation-warning"><div class="blinking-text" style="margin-top: clamp(100px, 25vh, 200px);">⚠️ 輻射濃度過高 ⚠️</div></div>
         
         <div class="top-exp-bar"><div id="exp-fill"></div></div>
         
@@ -217,12 +209,12 @@
             <button class="btn btn-blue" onclick="goToShop()">強化道具</button>
             <button class="btn btn-yellow" onclick="goToAchievements()">作戰圖鑑</button>
         </div>
-        <div style="margin-top: 40px; font-size: 20px; font-weight:bold; color: #facc15; text-shadow: 2px 2px 0 #000;">
-            <span style="font-size:24px; vertical-align:middle;">🪙</span> <span id="menu-coins">0</span>
+        <div style="margin-top: 5vh; font-size: clamp(20px, 6vw, 28px); font-weight:bold; color: #facc15; text-shadow: 2px 2px 0 #000;">
+            <span style="font-size:1.2em; vertical-align:middle;">🪙</span> <span id="menu-coins">0</span>
         </div>
     </div>
 
-    <!-- 選角介面 (對標影片) -->
+    <!-- 選角介面 (全自適應) -->
     <div id="char-select-menu" class="modal hidden">
         <div class="vs-header">
             <button class="icon-btn" onclick="backToMainMenu()">🔙</button>
@@ -236,14 +228,13 @@
                     <div class="char-info-text">
                         <h2 id="char-name">安東尼奧</h2>
                         <div class="char-weapon-info">武裝: <span id="char-weapon" style="color:#facc15;">前鋒機砲</span></div>
-                        <p id="char-desc" style="margin-top:5px;">駕駛標準戰機。每升 10 級提升 10% 傷害。</p>
+                        <p id="char-desc">駕駛標準戰機。每升 10 級提升 10% 傷害。</p>
                     </div>
                 </div>
                 <div class="char-stats-grid" id="char-stats"></div>
             </div>
-            <!-- 🌟 小巧緊湊的角色網格 -->
+            <!-- 可滑動的自適應網格 -->
             <div class="char-grid-bottom" id="char-grid"></div>
-            
             <div class="bottom-action-bar">
                 <button class="btn btn-green" onclick="goToStageSelect()">確認</button>
             </div>
@@ -255,11 +246,11 @@
         <div class="vs-header">
             <button class="icon-btn" onclick="goToCharSelect()">🔙</button>
             <div class="title">選擇星域</div>
-            <div style="width:48px;"></div>
+            <div style="width: clamp(40px, 10vmin, 60px);"></div>
         </div>
         <div class="stage-list-container" id="stage-list"></div>
         <div class="bottom-action-bar">
-            <!-- 🌟 直接開始遊戲，無任何拖泥帶水 -->
+            <!-- 🌟 直接開始遊戲 -->
             <button class="btn btn-green" onclick="startGame()">開始出擊</button>
         </div>
     </div>
@@ -269,7 +260,7 @@
         <div class="vs-header">
             <button class="icon-btn" onclick="backToMainMenu()">🔙</button>
             <div class="title">作戰圖鑑</div>
-            <div style="width:48px;"></div>
+            <div style="width: clamp(40px, 10vmin, 60px);"></div>
         </div>
         <div class="ach-list" id="ach-list-container"></div>
     </div>
@@ -281,32 +272,32 @@
             <div class="title">強化道具</div>
             <div class="coin-display">🪙 <span id="shop-coins-display">0</span></div>
         </div>
-        <div class="stage-list-container" id="shop-items-container"></div>
+        <div class="general-list-container" id="shop-items-container"></div>
     </div>
 
     <!-- 升級彈窗 (無背景純色) -->
-    <div id="level-up-modal" class="modal hidden" style="background: rgba(0,0,0,0.85); align-items: center; justify-content: flex-start; padding-top: 10vh;">
-        <h1 style="color: #facc15; text-shadow: 2px 2px 0 #000; margin: 0 0 20px 0; font-size: 40px; font-weight: 900;">等級提升</h1>
+    <div id="level-up-modal" class="modal hidden" style="background: rgba(0,0,0,0.85); align-items: center; justify-content: flex-start; padding-top: 8vh;">
+        <h1 style="color: #facc15; text-shadow: 2px 2px 0 #000; margin: 0 0 2vh 0; font-size: clamp(32px, 8vw, 48px); font-weight: 900;">等級提升</h1>
         <div class="upgrade-cards" id="upgrade-options" style="padding-top:0; width: 100%;"></div>
     </div>
 
     <!-- 寶箱彈窗 -->
     <div id="chest-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); justify-content: center; align-items: center;">
         <div style="text-align: center; width: 100%;">
-            <h1 style="color: #facc15; letter-spacing: 4px; text-shadow: 0 0 20px #ca8a04; font-size: 40px;">回收物資</h1>
+            <h1 style="color: #facc15; letter-spacing: 4px; text-shadow: 0 0 20px #ca8a04; font-size: clamp(28px, 8vw, 44px);">回收物資</h1>
             <div id="chest-box" class="chest-img" onclick="openChest()">📦</div>
             <div id="chest-reward-ui" style="display: none; width: 100%; align-items: center; flex-direction: column;">
-                <div style="background: #0f172a; border: 2px solid #facc15; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; margin: 20px auto; box-shadow: 0 4px 0 #000;" id="chest-item-box"></div>
-                <div style="color: #facc15; font-size: 28px; font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 0 #000;">🪙 +<span id="chest-coins">0</span></div>
-                <button class="btn btn-green" onclick="closeChest()" style="width: 200px;">完成</button>
+                <div class="popup-box-inner chest-reward-box" id="chest-item-box"></div>
+                <div style="color: #facc15; font-size: clamp(24px, 6vw, 36px); font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 0 #000;">🪙 +<span id="chest-coins">0</span></div>
+                <button class="btn btn-green" onclick="closeChest()" style="width: 200px; max-width: 80%;">完成</button>
             </div>
         </div>
     </div>
 
     <!-- 暫停彈窗 -->
     <div id="pause-modal" class="modal hidden" style="background: rgba(0,0,0,0.9); justify-content: center; align-items: center;">
-        <h1 style="color: #f8fafc; text-shadow: 2px 2px 0 #000; font-size: 40px; margin-bottom: 10px;">已暫停</h1>
-        <div style="background: #0f172a; padding: 15px; border-radius: 8px; border: 2px solid #334155; margin: 20px; width: 90%; max-width: 350px;">
+        <h1 style="color: #f8fafc; text-shadow: 2px 2px 0 #000; font-size: clamp(32px, 8vw, 48px); margin-bottom: 10px;">已暫停</h1>
+        <div class="popup-box-inner">
             <div style="color:#94a3b8; font-size: 14px; margin-bottom: 10px; font-weight: bold;">持有裝備：</div>
             <div class="inventory-container">
                 <div id="pause-weapon-row" class="inv-row" style="justify-content: center; flex-wrap: wrap;"></div>
@@ -322,12 +313,12 @@
     <!-- 結束彈窗 -->
     <div id="game-over-modal" class="modal hidden" style="background: rgba(26, 5, 5, 0.95); justify-content: center; align-items: center;">
         <div style="text-align:center; padding: 20px; width: 100%;">
-            <h1 id="game-over-title" style="color: #f87171; font-size: 48px; text-shadow: 4px 4px 0 #000; margin-bottom: 20px;">遊戲結束</h1>
-            <div style="background:#0f172a; padding:20px; border-radius:8px; border: 2px solid #334155; box-shadow: 0 4px 0 #000; margin-bottom: 30px; font-family: monospace; font-size: 16px; text-align: left; display: inline-block; width: 90%; max-width: 350px;">
+            <h1 id="game-over-title" style="color: #f87171; font-size: clamp(36px, 10vw, 56px); text-shadow: 4px 4px 0 #000; margin-bottom: 20px;">遊戲結束</h1>
+            <div class="popup-box-inner" style="font-family: monospace; font-size: clamp(14px, 4vw, 18px); text-align: left; max-width: 350px;">
                 <div style="margin-bottom: 12px; border-bottom: 1px dashed #334155; padding-bottom: 8px;">存活時間: <span id="final-time" style="float: right; color:#f8fafc; font-weight:bold;"></span></div>
                 <div style="margin-bottom: 12px; border-bottom: 1px dashed #334155; padding-bottom: 8px;">最終等級: <span id="final-level" style="float: right; color:#38bdf8; font-weight:bold;"></span></div>
                 <div style="margin-bottom: 12px;">擊殺數量: <span id="final-score" style="float: right; color:#f8fafc; font-weight:bold;"></span></div>
-                <div style="margin-top: 20px; border-top: 2px solid #334155; padding-top: 15px; color:#facc15; font-weight: bold; text-align: center; font-size: 28px; text-shadow: 2px 2px 0 #000;">
+                <div style="margin-top: 20px; border-top: 2px solid #334155; padding-top: 15px; color:#facc15; font-weight: bold; text-align: center; font-size: clamp(24px, 6vw, 32px); text-shadow: 2px 2px 0 #000;">
                     🪙 +<span id="final-coins"></span>
                 </div>
             </div>
@@ -338,7 +329,7 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
-        // 🍏 Apple 全系列終極防雙擊放大保護
+        // 🍏 Apple 全系列防雙擊放大保護
         document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
         document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
         let lastTouchEnd = 0;
@@ -354,20 +345,20 @@
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
 
-        // 🛡️ 終極存檔保險箱 (絕對防當機)
+        // 🛡️ 終極存檔保險箱
         let saveData = { coins: 0, upgrades: {}, achievements: [] };
         try {
-            const stored = localStorage.getItem('spaceSurvivorsSave_v5');
+            const stored = localStorage.getItem('spaceSurvivorsSave_v44');
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (parsed.coins !== undefined) saveData.coins = parseInt(parsed.coins) || 0;
                 if (parsed.upgrades) saveData.upgrades = parsed.upgrades;
-                if (parsed.achievements) saveData.achievements = parsed.achievements;
+                if (parsed.achievements && Array.isArray(parsed.achievements)) saveData.achievements = parsed.achievements;
             }
-        } catch(e) { console.error("存檔損毀，已重置"); }
+        } catch(e) { console.error("存檔異常，已重置防護"); }
         
         function saveGame() { 
-            localStorage.setItem('spaceSurvivorsSave_v5', JSON.stringify(saveData)); 
+            localStorage.setItem('spaceSurvivorsSave_v44', JSON.stringify(saveData)); 
             updateMenuCoins(); 
         }
 
@@ -421,12 +412,12 @@
         };
 
         const CHARACTERS = [
-            { id: 'ranger', name: '安東尼奧 (游俠)', icon: '🧑‍🚀', hp: 100, speed: 4.0, damage: 1.0, weapon: 'blaster', desc: '標準戰機。每升 10 級提升 10% 傷害。' },
-            { id: 'heavy', name: '格羅克 (獸人)', icon: '🦍', hp: 180, speed: 3.0, damage: 0.8, weapon: 'drone', desc: '重裝坦克。高血量，移動緩慢。' },
-            { id: 'scout', name: '艾莉亞 (精靈)', icon: '🧝‍♀️', hp: 70, speed: 5.5, damage: 0.9, weapon: 'laser', desc: '輕型飛翼。擁有極高的機動性。' },
-            { id: 'engineer', name: 'C-137 (智械)', icon: '🤖', hp: 120, speed: 3.8, damage: 1.0, weapon: 'mine', desc: '維修圓盤。武器持續時間增加 20%。' },
-            { id: 'ghost', name: '澤拉圖 (星客)', icon: '👽', hp: 80, speed: 4.8, damage: 1.2, weapon: 'blade', desc: '隱形機。基礎傷害較高。' },
-            { id: 'scavenger', name: '火箭 (浣熊)', icon: '🦝', hp: 90, speed: 4.5, damage: 1.0, weapon: 'bomb', desc: '回收船。天生擁有極大的物資拾取範圍。' }
+            { id: 'ranger', name: '安東尼奧', icon: '🧑‍🚀', hp: 100, speed: 4.0, damage: 1.0, weapon: 'blaster', desc: '標準戰機。每 10 級提升 10% 傷害。' },
+            { id: 'heavy', name: '格羅克', icon: '🦍', hp: 180, speed: 3.0, damage: 0.8, weapon: 'drone', desc: '重裝坦克。高血量，移動緩慢。' },
+            { id: 'scout', name: '艾莉亞', icon: '🧝‍♀️', hp: 70, speed: 5.5, damage: 0.9, weapon: 'laser', desc: '輕型飛翼。擁有極高的機動性。' },
+            { id: 'engineer', name: 'C-137', icon: '🤖', hp: 120, speed: 3.8, damage: 1.0, weapon: 'mine', desc: '維修圓盤。武器持續時間增加 20%。' },
+            { id: 'ghost', name: '澤拉圖', icon: '👽', hp: 80, speed: 4.8, damage: 1.2, weapon: 'blade', desc: '隱形機。基礎傷害較高。' },
+            { id: 'scavenger', name: '火箭', icon: '🦝', hp: 90, speed: 4.5, damage: 1.0, weapon: 'bomb', desc: '回收船。天生擁有極大的物資拾取範圍。' }
         ];
 
         const STAGES = [
@@ -562,8 +553,8 @@
                     const item = shopConfig[key]; const currentLevel = saveData.upgrades[key] || 0;
                     const cost = item.baseCost * (currentLevel + 1); const isMax = currentLevel >= item.maxLevel;
                     const div = document.createElement('div'); div.className = 'shop-item';
-                    div.innerHTML = `<h3>${item.name} <span style="color:#94a3b8; font-size:12px;">(Lv.${currentLevel}/${item.maxLevel})</span></h3><p>${item.desc}</p>
-                        <button class="btn btn-green shop-buy-btn" ${isMax || saveData.coins < cost ? 'disabled' : ''} onclick="buyUpgrade('${key}', ${cost})">${isMax ? '滿級' : `💰 ${cost}`}</button>`;
+                    div.innerHTML = `<h3 style="margin:0 0 5px 0; color:#38bdf8;">${item.name} <span style="color:#94a3b8; font-size:clamp(10px, 2.5vw, 14px);">(Lv.${currentLevel}/${item.maxLevel})</span></h3><p style="margin:0 0 10px 0; color:#cbd5e1; font-size:clamp(12px, 3vw, 16px);">${item.desc}</p>
+                        <button class="btn btn-green shop-buy-btn" style="width:100%; padding:8px; font-size:clamp(14px, 3.5vw, 18px);" ${isMax || saveData.coins < cost ? 'disabled' : ''} onclick="buyUpgrade('${key}', ${cost})">${isMax ? '滿級' : `💰 ${cost}`}</button>`;
                     container.appendChild(div);
                 }
             }
@@ -754,7 +745,7 @@
         window.addEventListener('keydown', e => { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault(); keys[e.code] = true; if (e.code === 'Escape' || e.code === 'KeyP') togglePause(); if (e.code === 'Space') triggerDash(); });
         window.addEventListener('keyup', e => keys[e.code] = false);
         
-        // 觸控虛擬搖桿 (只在 canvas 上攔截，不影響按鈕)
+        // 觸控虛擬搖桿
         let isTouching = false, joystickOrigin = null, joystickCurrent = null, touchVector = { x: 0, y: 0 };
         canvas.addEventListener('touchstart', e => { e.preventDefault(); const touch = e.touches[0]; joystickOrigin = { x: touch.clientX, y: touch.clientY }; joystickCurrent = { x: touch.clientX, y: touch.clientY }; isTouching = true; touchVector = { x: 0, y: 0 }; }, {passive: false});
         canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!isTouching || !joystickOrigin) return; const touch = e.touches[0]; joystickCurrent = { x: touch.clientX, y: touch.clientY }; const dist = Math.hypot(joystickCurrent.x - joystickOrigin.x, joystickCurrent.y - joystickOrigin.y); if (dist > 5) { touchVector.x = (joystickCurrent.x - joystickOrigin.x) / dist; touchVector.y = (joystickCurrent.y - joystickOrigin.y) / dist; } }, {passive: false});
@@ -858,7 +849,7 @@
 
             if (readyEvo) {
                 const db = WEAPON_DB[readyEvo];
-                chestRewardItem = { type: 'evo', id: readyEvo, html: `<span class="tag evo-tag">進化</span><h2 style="margin:0 0 5px 0; color:#f8fafc; font-size:20px;">${db.evoIcon} ${db.evoName}</h2><p style="margin:0; color:#94a3b8; font-size:14px;">突破極限！</p>` };
+                chestRewardItem = { type: 'evo', id: readyEvo, html: `<span class="tag evo-tag">進化</span><h2 style="margin:0 0 5px 0; color:#f8fafc; font-size:clamp(16px, 4vw, 24px);">${db.evoIcon} ${db.evoName}</h2><p style="margin:0; color:#94a3b8; font-size:clamp(12px, 3vw, 16px);">突破極限！</p>` };
                 goldReward += 200;
             } else {
                 let upgradePool = [];
@@ -869,9 +860,9 @@
                     let pick = upgradePool[Math.floor(Math.random() * upgradePool.length)];
                     let db = pick.type === 'weapon' ? WEAPON_DB[pick.id] : PASSIVE_DB[pick.id];
                     let nextLv = (pick.type === 'weapon' ? player.weapons[pick.id].level : player.passives[pick.id].level) + 1;
-                    chestRewardItem = { type: pick.type, id: pick.id, html: `<span class="tag">強化</span><h2 style="margin:0 0 5px 0; color:#f8fafc; font-size:20px;">${db.icon} ${db.name}</h2><p style="margin:0; color:#94a3b8; font-size:14px;">升級至 Lv.${nextLv}</p>` };
+                    chestRewardItem = { type: pick.type, id: pick.id, html: `<span class="tag">強化</span><h2 style="margin:0 0 5px 0; color:#f8fafc; font-size:clamp(16px, 4vw, 24px);">${db.icon} ${db.name}</h2><p style="margin:0; color:#94a3b8; font-size:clamp(12px, 3vw, 16px);">升級至 Lv.${nextLv}</p>` };
                 } else {
-                    chestRewardItem = { type: 'gold', html: `<span class="tag new">財富</span><h2 style="margin:0 0 5px 0; color:#facc15; font-size:20px;">💰 巨型金幣</h2><p style="margin:0; color:#94a3b8; font-size:14px;">獲得大量物資</p>` };
+                    chestRewardItem = { type: 'gold', html: `<span class="tag new">財富</span><h2 style="margin:0 0 5px 0; color:#facc15; font-size:clamp(16px, 4vw, 24px);">💰 巨型金幣</h2><p style="margin:0; color:#94a3b8; font-size:clamp(12px, 3vw, 16px);">獲得大量物資</p>` };
                     goldReward += 500;
                 }
             }
@@ -1207,7 +1198,9 @@
                 if (isHit) {
                     spawnParticles(d.x, d.y, '#38bdf8', 15);
                     const rand = Math.random();
-                    if (rand < 0.2) { consumables.push({ type: 'heal', x: d.x, y: d.y }); }
+                    if (d.isMissionObjective) {
+                        consumables.push({ type: 'chest', x: d.x, y: d.y }); 
+                    } else if (rand < 0.2) { consumables.push({ type: 'heal', x: d.x, y: d.y }); }
                     else if (rand < 0.3) { consumables.push({ type: 'bomb', x: d.x, y: d.y }); }
                     else if (rand < 0.4) { consumables.push({ type: 'magnet', x: d.x, y: d.y }); }
                     else { coinsArr.push({ x: d.x, y: d.y, value: 10 }); }
