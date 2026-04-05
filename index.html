@@ -3,21 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>宇宙倖存者</title>
+    <title>星際突圍：輓救行動</title>
     <style>
+        /* 🍏 基礎重置與全域安全區域設定 */
         * { box-sizing: border-box; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         body { 
             margin: 0; padding: 0; background: #1a0505; 
             overflow: hidden; color: #f8fafc; 
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif; 
             touch-action: none; overscroll-behavior: none; 
-            width: 100vw; height: 100vh; height: 100dvh; 
+            width: 100vw; 
+            height: 100vh; /* 舊版 iOS fallback */
+            height: 100dvh; /* 動態視口高度，完美貼合 iOS Safari */
         }
         canvas { display: block; width: 100%; height: 100%; touch-action: none; }
         
+        /* 覆蓋層與模態視窗共用 */
         .overlay, .modal { 
             position: absolute; top: 0; left: 0; width: 100vw; height: 100dvh; 
             display: flex; flex-direction: column; z-index: 20; 
+            /* 🛡️ Apple 全系列 Safe Area 完美避讓 */
             padding: max(0px, env(safe-area-inset-top)) max(0px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(0px, env(safe-area-inset-left));
         }
         .overlay { z-index: 5; pointer-events: none; padding-bottom: 0; padding-top: 0; }
@@ -26,6 +31,7 @@
         
         button { touch-action: manipulation; outline: none; border: none; font-family: inherit; margin: 0; }
         
+        /* 🌊 流體按鈕樣式 */
         .btn { 
             padding: clamp(10px, 2.5vh, 20px) clamp(15px, 4vw, 30px); 
             font-size: clamp(16px, 4vmin, 24px); 
@@ -43,6 +49,7 @@
         .btn.danger { background: #7f1d1d; border-color: #b91c1c; border-bottom-color: #450a0a; }
         .btn:disabled { background: #1e293b; border-color: #334155; border-bottom-color: #0f172a; color: #64748b; cursor: not-allowed; transform: none; border-bottom-width: clamp(2px, 1vh, 6px); }
         
+        /* === 遊戲內 HUD (流體化) === */
         .top-exp-bar { position: absolute; top: max(0px, env(safe-area-inset-top)); left: 0; width: 100%; height: clamp(8px, 2vh, 16px); background: rgba(0,0,0,0.9); border-bottom: 2px solid #1e293b; z-index: 10; pointer-events: none; }
         #exp-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #60a5fa, #93c5fd); width: 0%; transition: width 0.2s ease-out; box-shadow: 0 0 15px #3b82f6; }
         
@@ -58,6 +65,7 @@
         
         @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 5px #facc15; } 50% { box-shadow: 0 0 15px #fbbf24; } }
 
+        /* 成就彈窗 */
         #achievement-popup { position: absolute; top: -100px; left: 50%; transform: translateX(-50%); background: #2e0909; border: 2px solid #facc15; border-radius: 8px; padding: clamp(5px, 1.5vh, 15px) clamp(15px, 4vw, 30px); display: flex; align-items: center; gap: clamp(10px, 3vw, 20px); box-shadow: 0 4px 10px rgba(0,0,0,0.8); z-index: 100; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; width: max-content; max-width: 90vw; }
         #achievement-popup.show { top: calc(clamp(30px, 5vh, 50px) + max(0px, env(safe-area-inset-top))); }
 
@@ -76,12 +84,14 @@
         
         #radiation-warning { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, rgba(239,68,68,0) 50%, rgba(239,68,68,0.4) 100%); pointer-events: none; z-index: 8; opacity: 0; transition: opacity 0.3s; display: flex; justify-content: center; align-items: center; }
 
+        /* === VS 模態視窗系統 === */
         .vs-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: rgba(0,0,0,0.6); border-bottom: 2px solid #450a0a; flex-shrink: 0; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .vs-header .title { font-size: 32px; font-weight: 900; color: #facc15; text-shadow: 2px 2px 0 #000; letter-spacing: 2px; margin: 0; }
         .vs-header .coin-display { font-size: 28px; font-weight: bold; color: #facc15; text-shadow: 2px 2px 0 #000; display: flex; align-items: center; gap: 8px;}
         .icon-btn { background: #0f172a; border: 2px solid #334155; color: white; font-size: 28px; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 8px; box-shadow: 0 6px 0 #020617; outline: none; }
         .icon-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #020617; }
 
+        /* 🌟 角色選擇專屬佈局 */
         .char-select-layout { flex: 1; display: flex; flex-direction: column; min-height: 0; } 
         
         .char-details-top { display: flex; flex-direction: column; padding: 30px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%); border-bottom: 2px solid #450a0a; gap: 20px; flex-shrink: 0; }
@@ -106,6 +116,7 @@
         .bottom-action-bar { padding: 20px 30px; background: rgba(0,0,0,0.8); border-top: 2px solid #450a0a; display: flex; justify-content: center; flex-shrink: 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.5); padding-bottom: max(20px, env(safe-area-inset-bottom)); }
         .bottom-action-bar .btn { max-width: 600px; font-size: 32px; padding: 20px; letter-spacing: 6px; width: 100%; }
 
+        /* 關卡選擇佈局 */
         .stage-list-container { flex: 1; overflow-y: auto; padding: clamp(15px, 4vw, 30px); display: flex; flex-direction: column; gap: clamp(12px, 3vh, 25px); -webkit-overflow-scrolling: touch; align-items: center; }
         .stage-card { background: #0f172a; border: clamp(2px, 0.5vmin, 4px) solid #334155; border-radius: 12px; padding: clamp(15px, 3vh, 30px); cursor: pointer; display: flex; flex-direction: column; transition: transform 0.1s; width: 100%; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .stage-card.selected { border-color: #facc15; background: #450a0a; box-shadow: 0 0 20px rgba(250,204,21,0.3); transform: translateX(5px); }
@@ -113,11 +124,14 @@
         .stage-card p { margin: 0; font-size: clamp(12px, 3.5vmin, 16px); color: #cbd5e1; line-height: 1.5; }
         .stage-card.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); transform: none; }
 
+        /* 標題畫面 */
         .title-screen-layout { align-items: center; justify-content: center; text-align: center; }
+        /* 🌟 改名為星際突圍 */
         .mega-title { font-size: clamp(40px, 12vw, 80px); color: #facc15; text-shadow: clamp(3px, 1vw, 6px) clamp(3px, 1vw, 6px) 0 #9f1239, 0 0 40px rgba(250,204,21,0.5); letter-spacing: clamp(2px, 1vw, 6px); font-weight: 900; margin: 0; line-height: 1.1; }
         .sub-title { font-size: clamp(16px, 5vw, 28px); color: #e2e8f0; letter-spacing: clamp(6px, 2vw, 12px); margin-top: 15px; margin-bottom: clamp(40px, 10vh, 80px); text-shadow: 2px 2px 0 #000; }
         .main-menu-btns { display: flex; flex-direction: column; gap: clamp(15px, 3vh, 25px); width: 100%; max-width: 400px; padding: 0 20px; }
         
+        /* 通用選單容器 */
         .general-list-container { flex: 1; overflow-y: auto; padding: clamp(15px, 4vw, 30px); display: flex; flex-direction: column; gap: clamp(10px, 2.5vh, 20px); align-items: center; -webkit-overflow-scrolling: touch; }
 
         .card { background: #0f172a; border: clamp(2px, 0.5vmin, 4px) solid #334155; border-radius: 8px; padding: clamp(12px, 2.5vh, 20px); width: 100%; max-width: 600px; margin: 0 auto; cursor: pointer; display: flex; align-items: center; gap: clamp(12px, 3vw, 25px); box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 6px 0 #020617; }
@@ -130,6 +144,7 @@
         .tag.new { background: #b45309; color: #fde047; }
         .tag.evo-tag { background: #9f1239; color: #fbcfe8; }
 
+        /* 圖鑑成就 UI */
         .ach-item { display: flex; gap: clamp(12px, 3vw, 20px); background: #0f172a; border: clamp(2px, 0.5vmin, 3px) solid #334155; border-radius: 12px; padding: clamp(12px, 2.5vh, 20px); align-items: center; opacity: 0.6; filter: grayscale(1); width: 100%; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);}
         .ach-item.unlocked { opacity: 1; filter: grayscale(0); border-color: #facc15; background: #2e0909; }
         .ach-item-icon { font-size: clamp(32px, 8vmin, 45px); width: clamp(40px, 10vmin, 60px); text-align: center; text-shadow: 2px 2px 0 #000; flex-shrink: 0;}
@@ -138,16 +153,20 @@
         .ach-item p { margin: 0; font-size: clamp(12px, 3vmin, 15px); color: #94a3b8; line-height: 1.4; }
         .ach-reward { font-size: clamp(10px, 2.5vmin, 13px); color: #facc15; font-weight: bold; margin-top: 8px; display: inline-block; text-shadow: 1px 1px 0 #000; }
 
+        /* 動畫效果 */
         .chest-img { font-size: clamp(80px, 25vmin, 150px); text-shadow: 0 0 50px rgba(250,204,21,0.8); cursor: pointer; margin: clamp(30px, 8vh, 60px) 0; display: inline-block;}
         @keyframes shake { 0% { transform: translate(2px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-2deg); } 20% { transform: translate(-3px, 0px) rotate(2deg); } 30% { transform: translate(0px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(2deg); } 50% { transform: translate(-1px, 2px) rotate(-2deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(2px, 1px) rotate(-2deg); } 80% { transform: translate(-1px, -1px) rotate(2deg); } 90% { transform: translate(2px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-2deg); } }
         .opening { animation: shake 0.4s infinite; }
         .blinking-text { font-size: clamp(14px, 4vw, 20px); color: #fca5a5; animation: blink 1.5s infinite; letter-spacing: 2px; font-weight: bold; text-shadow: 2px 2px 0 #000; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+        /* 寶箱與暫停彈窗小微調 */
         .popup-box-inner { background: #0f172a; border: 2px solid #334155; border-radius: 8px; padding: clamp(15px, 3vh, 25px); width: 90%; max-width: 400px; margin: 20px auto; box-shadow: 0 6px 0 #000; }
         .chest-reward-box { border-color: #facc15; }
 
-        /* 手機適配 */
+        /* =========================================
+           📱 標準手機適配 (iPhone 12/13/14/15 等)
+           ========================================= */
         @media (max-width: 767px) {
             .btn { font-size: 18px; padding: 15px 20px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 0 #020617; }
             .btn:active { transform: translateY(4px); box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 0 #020617; }
@@ -176,7 +195,9 @@
             .bottom-action-bar .btn { font-size: 20px; padding: 12px; max-width: 300px; }
         }
 
-        /* 狹窄手機適配 */
+        /* =========================================
+           📱 狹窄手機適配 (iPhone SE, 12/13 mini 等)
+           ========================================= */
         @media (max-width: 380px) {
             .vs-header { padding: 10px; }
             .vs-header .title { font-size: 18px; letter-spacing: 1px; }
@@ -202,6 +223,7 @@
 </head>
 <body>
 
+    <!-- 遊戲進行中 UI -->
     <div id="game-ui" class="overlay hidden">
         <div id="achievement-popup">
             <div style="font-size: clamp(24px, 6vw, 36px);">🏆</div>
@@ -233,20 +255,21 @@
         <button id="dash-btn" onclick="triggerDash()">空間<br>摺疊</button>
     </div>
 
+    <!-- 標題主選單 -->
     <div id="title-screen" class="modal title-screen-layout">
-        <!-- 🌟 正名為 UNIVERSE SURVIVORS 宇宙倖存者 -->
-        <h1 class="mega-title">UNIVERSE<br>SURVIVORS</h1>
-        <h2 class="sub-title">宇宙倖存者</h2>
+        <h1 class="mega-title">STELLAR<br>BREAKOUT</h1>
+        <h2 class="sub-title">星際突圍：輓救行動</h2>
         <div class="main-menu-btns">
-            <button class="btn btn-green" onclick="goToCharSelect()">開始遊戲</button>
-            <button class="btn btn-blue" onclick="goToShop()">強化道具</button>
-            <button class="btn btn-yellow" onclick="goToAchievements()">作戰圖鑑</button>
+            <button class="btn btn-green" onclick="goToCharSelect()">開始出擊</button>
+            <button class="btn btn-blue" onclick="goToShop()">科技樹升級</button>
+            <button class="btn btn-yellow" onclick="goToAchievements()">作戰紀錄</button>
         </div>
         <div style="margin-top: 5vh; font-size: clamp(20px, 6vw, 28px); font-weight:bold; color: #facc15; text-shadow: 2px 2px 0 #000;">
             <span style="font-size:1.2em; vertical-align:middle;">🪙</span> <span id="menu-coins">0</span>
         </div>
     </div>
 
+    <!-- 選角介面 -->
     <div id="char-select-menu" class="modal hidden">
         <div class="vs-header">
             <button class="icon-btn" onclick="backToMainMenu()">🔙</button>
@@ -260,7 +283,7 @@
                     <div class="char-info-text">
                         <h2 id="char-name">安東尼奧</h2>
                         <div class="char-weapon-info">武裝: <span id="char-weapon" style="color:#facc15;">前鋒機砲</span></div>
-                        <p id="char-desc">駕駛標準戰機。每升 10 級提升 10% 傷害。</p>
+                        <p id="char-desc">駕駛標準戰機。每 10 級提升 10% 傷害。</p>
                     </div>
                 </div>
                 <div class="char-stats-grid" id="char-stats"></div>
@@ -272,6 +295,7 @@
         </div>
     </div>
 
+    <!-- 地圖選擇介面 -->
     <div id="stage-select-menu" class="modal hidden">
         <div class="vs-header">
             <button class="icon-btn" onclick="goToCharSelect()">🔙</button>
@@ -280,33 +304,37 @@
         </div>
         <div class="stage-list-container" id="stage-list"></div>
         <div class="bottom-action-bar">
-            <button class="btn btn-green" onclick="startGame()">開始出擊</button>
+            <button class="btn btn-green" onclick="startGame()">部署</button>
         </div>
     </div>
 
+    <!-- 圖鑑系統 -->
     <div id="achievements-menu" class="modal hidden">
         <div class="vs-header">
             <button class="icon-btn" onclick="backToMainMenu()">🔙</button>
-            <div class="title">作戰圖鑑</div>
+            <div class="title">作戰紀錄</div>
             <div style="width: clamp(40px, 10vmin, 60px);"></div>
         </div>
         <div class="general-list-container ach-list" id="ach-list-container"></div>
     </div>
 
+    <!-- 商店系統 -->
     <div id="shop-menu" class="modal hidden">
         <div class="vs-header">
             <button class="icon-btn" onclick="backToMainMenu()">🔙</button>
-            <div class="title">強化道具</div>
+            <div class="title">科技樹升級</div>
             <div class="coin-display">🪙 <span id="shop-coins-display">0</span></div>
         </div>
         <div class="general-list-container" id="shop-items-container"></div>
     </div>
 
+    <!-- 升級彈窗 -->
     <div id="level-up-modal" class="modal hidden" style="background: rgba(0,0,0,0.85); align-items: center; justify-content: flex-start; padding-top: 8vh;">
         <h1 style="color: #facc15; text-shadow: 2px 2px 0 #000; margin: 0 0 2vh 0; font-size: clamp(32px, 8vw, 48px); font-weight: 900;">等級提升</h1>
         <div class="upgrade-cards" id="upgrade-options" style="padding-top:0; width: 100%;"></div>
     </div>
 
+    <!-- 寶箱彈窗 -->
     <div id="chest-modal" class="modal hidden" style="background: rgba(0,0,0,0.95); justify-content: center; align-items: center;">
         <div style="text-align: center; width: 100%;">
             <h1 style="color: #facc15; letter-spacing: 4px; text-shadow: 0 0 20px #ca8a04; font-size: clamp(28px, 8vw, 44px);">回收物資</h1>
@@ -319,10 +347,11 @@
         </div>
     </div>
 
+    <!-- 暫停彈窗 -->
     <div id="pause-modal" class="modal hidden" style="background: rgba(0,0,0,0.9); justify-content: center; align-items: center;">
         <h1 style="color: #f8fafc; text-shadow: 2px 2px 0 #000; font-size: clamp(32px, 8vw, 48px); margin-bottom: 10px;">已暫停</h1>
         <div class="popup-box-inner">
-            <div style="color:#94a3b8; font-size: 14px; margin-bottom: 10px; font-weight: bold;">持有裝備：</div>
+            <div style="color:#94a3b8; font-size: 14px; margin-bottom: 10px; font-weight: bold;">持有武裝：</div>
             <div class="inventory-container">
                 <div id="pause-weapon-row" class="inv-row" style="justify-content: center; flex-wrap: wrap;"></div>
                 <div id="pause-passive-row" class="inv-row" style="justify-content: center; flex-wrap: wrap;"></div>
@@ -334,6 +363,7 @@
         </div>
     </div>
 
+    <!-- 結束彈窗 -->
     <div id="game-over-modal" class="modal hidden" style="background: rgba(26, 5, 5, 0.95); justify-content: center; align-items: center;">
         <div style="text-align:center; padding: 20px; width: 100%;">
             <h1 id="game-over-title" style="color: #f87171; font-size: clamp(36px, 10vw, 56px); text-shadow: 4px 4px 0 #000; margin-bottom: 20px;">遊戲結束</h1>
@@ -352,6 +382,7 @@
     <canvas id="gameCanvas"></canvas>
 
     <script>
+        // 🍏 Apple 防放大保護
         document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
         document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
         let lastTouchEnd = 0;
@@ -369,17 +400,17 @@
 
         let saveData = { coins: 0, upgrades: {}, achievements: [] };
         try {
-            const stored = localStorage.getItem('spaceSurvivorsSave_v503');
+            const stored = localStorage.getItem('spaceSurvivorsSave_v504');
             if (stored) {
                 const parsed = JSON.parse(stored);
                 if (parsed.coins !== undefined) saveData.coins = parseInt(parsed.coins) || 0;
                 if (parsed.upgrades) saveData.upgrades = parsed.upgrades;
                 if (parsed.achievements && Array.isArray(parsed.achievements)) saveData.achievements = parsed.achievements;
             }
-        } catch(e) { console.error("存檔異常，已重置防護"); }
+        } catch(e) { console.error("存檔異常，已重置"); }
         
         function saveGame() { 
-            localStorage.setItem('spaceSurvivorsSave_v503', JSON.stringify(saveData)); 
+            localStorage.setItem('spaceSurvivorsSave_v504', JSON.stringify(saveData)); 
             updateMenuCoins(); 
         }
 
@@ -587,6 +618,7 @@
         function buyUpgrade(key, cost) { if (saveData.coins >= cost) { saveData.coins -= cost; saveData.upgrades[key] = (saveData.upgrades[key] || 0) + 1; saveGame(); renderShop(); } }
 
         function checkAchievement(id) {
+            if (!saveData.achievements) saveData.achievements = [];
             if (!saveData.achievements.includes(id)) {
                 saveData.achievements.push(id);
                 if (id === 'kill_elite') { saveData.coins += 500; }
@@ -651,6 +683,7 @@
         }
 
         function acquireWeapon(id) {
+            // 💥 無人機等武器的初始傷害已加強
             if(id === 'blaster') player.weapons.blaster = { level: 1, baseDamage: 15, baseCooldown: 40, baseSpeed: 14, count: 1, timer: 0, isEvolved: false };
             if(id === 'laser') player.weapons.laser = { level: 1, baseDamage: 10, baseCooldown: 50, baseSpeed: 15, timer: 0, isEvolved: false };
             if(id === 'drone') player.weapons.drone = { level: 1, baseDamage: 10, count: 2, baseRadius: 50, baseSpeed: 0.05, isEvolved: false };
@@ -823,8 +856,7 @@
 
             let waveMin = Math.floor(gameSeconds / 30);
             let hpScale = 1 + waveMin * 0.8 + Math.pow(waveMin, 2) * 0.4; 
-            
-            // 💥 海量怪物湧現：大幅提升生成數量
+            // 💥 海量怪物湧現：大幅提高生成數量 (15隻起跳)
             let count = 15 + Math.floor(gameSeconds / 5) * 5; 
             let isSwarm = (gameSeconds % 60 >= 45); 
             if (isSwarm) count *= 3; 
@@ -1113,6 +1145,7 @@
                 worldX += player.lastFacingX * currentSpeed; worldY += player.lastFacingY * currentSpeed;
             }
 
+            // 🗺️ 檢查輻射邊界
             const distFromCenter = Math.hypot(worldX, worldY);
             const radWarning = document.getElementById('radiation-warning');
             if (distFromCenter > MAP_LIMIT) {
@@ -1209,8 +1242,7 @@
                     }
                 }
             }
-
-            // 產生無人機的座標位置
+            
             const orbitals = [];
             if (player.weapons.drone) { 
                 let w = player.weapons.drone; let fSpeed = w.baseSpeed * globalProjSpeedMult; let fRadius = w.baseRadius * globalAreaMult;
@@ -1218,8 +1250,8 @@
                 for(let i=0; i < w.count; i++) { orbitals.push({ x: worldX + Math.cos(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius, y: worldY + Math.sin(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius }); } 
             }
 
-            // 💥 海量怪物湧現：大幅加快生成頻率
-            let spawnInterval = 30; // 每 0.5 秒生成一次
+            // 💥 海量怪物生成設定 (每秒最高達2次生成，初期15隻起跳)
+            let spawnInterval = 30; 
             if (gameSeconds >= 30) spawnInterval = 20;
             if (gameSeconds >= 60) spawnInterval = 15;
             if (gameSeconds >= 120) spawnInterval = 10;
@@ -1374,7 +1406,7 @@
                                         let explosionAngle = Math.atan2(e2.y - bullets[j].y, e2.x - bullets[j].x);
                                         e2.knockbackX += Math.cos(explosionAngle) * 4 * e2.kbResist;
                                         e2.knockbackY += Math.sin(explosionAngle) * 4 * e2.kbResist;
-                                        e2.damageFlash = 8; addFloatingText(e2, bullets[j].damage, '#f0abfc');
+                                        e2.damageFlash = 6; addFloatingText(e2, bullets[j].damage, '#f0abfc');
                                     }
                                 });
                                 bullets.splice(j, 1); screenShake = Math.max(screenShake, 5);
@@ -1688,22 +1720,6 @@
 
                 particles.forEach(p => { const pos = getScreenPos(p.x, p.y); ctx.globalAlpha = Math.max(0, p.life / p.maxLife); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(pos.x, pos.y, Math.max(0.1, p.size), 0, Math.PI*2); ctx.fill(); }); ctx.globalAlpha = 1.0;
 
-                // 畫無人機等軌道武器
-                const orbitals = [];
-                if (player.weapons.drone) { 
-                    let w = player.weapons.drone; let fSpeed = w.baseSpeed * globalProjSpeedMult; let fRadius = w.baseRadius * globalAreaMult; const orbitSpeed = frameCount * fSpeed; 
-                    ctx.fillStyle = w.isEvolved ? '#a78bfa' : '#facc15';
-                    for(let i=0; i < w.count; i++) { 
-                        const orbX = worldX + Math.cos(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius;
-                        const orbY = worldY + Math.sin(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius;
-                        const pos = getScreenPos(orbX, orbY); 
-                        ctx.save(); ctx.translate(pos.x, pos.y); ctx.rotate(orbitSpeed + (Math.PI * 2 / w.count) * i); ctx.beginPath(); 
-                        if(w.isEvolved) { ctx.moveTo(10, 0); ctx.lineTo(0, 6); ctx.lineTo(-10, 0); ctx.lineTo(0, -6); } else { ctx.moveTo(8, 0); ctx.lineTo(0, 5); ctx.lineTo(-8, 0); ctx.lineTo(0, -5); }
-                        ctx.closePath(); ctx.fill(); ctx.restore(); 
-                    } 
-                    if(w.isEvolved) { ctx.strokeStyle='rgba(167, 139, 250, 0.2)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, fRadius, 0, Math.PI*2); ctx.stroke(); }
-                }
-
                 bullets.forEach(b => { 
                     const pos = getScreenPos(b.x, b.y); 
                     if (b.type === 'plasma') { 
@@ -1729,6 +1745,18 @@
                         ctx.beginPath(); ctx.moveTo(pos.x, pos.y); ctx.lineTo(pos.x - b.vx * 2, pos.y - b.vy * 2); ctx.stroke(); 
                     } 
                 }); 
+
+                if (player.weapons.drone) { 
+                    let w = player.weapons.drone; let fSpeed = w.baseSpeed * globalProjSpeedMult; let fRadius = w.baseRadius * globalAreaMult; const orbitSpeed = frameCount * fSpeed; 
+                    ctx.fillStyle = w.isEvolved ? '#a78bfa' : '#facc15';
+                    for(let i=0; i < w.count; i++) { 
+                        const pos = getScreenPos(worldX + Math.cos(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius, worldY + Math.sin(orbitSpeed + (Math.PI * 2 / w.count) * i) * fRadius); 
+                        ctx.save(); ctx.translate(pos.x, pos.y); ctx.rotate(orbitSpeed + (Math.PI * 2 / w.count) * i); ctx.beginPath(); 
+                        if(w.isEvolved) { ctx.moveTo(10, 0); ctx.lineTo(0, 6); ctx.lineTo(-10, 0); ctx.lineTo(0, -6); } else { ctx.moveTo(8, 0); ctx.lineTo(0, 5); ctx.lineTo(-8, 0); ctx.lineTo(0, -5); }
+                        ctx.closePath(); ctx.fill(); ctx.restore(); 
+                    } 
+                    if(w.isEvolved) { ctx.strokeStyle='rgba(167, 139, 250, 0.2)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(canvas.width/2, canvas.height/2, fRadius, 0, Math.PI*2); ctx.stroke(); }
+                }
 
                 if (gameState !== 'dying') {
                     // 雷達指標
@@ -1785,11 +1813,8 @@
 
         function gameLoop() { 
             if (gameState === 'playing' || gameState === 'dying') update(); 
-            draw(); 
-            requestAnimationFrame(gameLoop); 
+            draw(); requestAnimationFrame(gameLoop); 
         }
-        
-        // 啟動遊戲
         gameLoop();
     </script>
 </body>
