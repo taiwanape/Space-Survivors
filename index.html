@@ -350,6 +350,9 @@
     let destructiblesDestroyed=0, bossSpawned=false, currentBoss=null, screenShake=0, deathTimer=0, deathShockwaveRadius=0, deathFlashAlpha=0;
     let globalDmgMult=1, globalCdMult=1, globalProjSpeedMult=1, globalAreaMult=1, globalDurationMult=1;
     
+    // 🔥 新增玻璃裂痕全域變數
+    let glassCracks = [], glassCrackCenter = {x:0, y:0};
+
     let player = { size:16, hp:0, maxHp:0, exp:0, maxExp:5, level:1, speed:4, angle:-Math.PI/2, lastFacingX:1, lastFacingY:0, damageFlash:0, weapons:{}, passives:{}, skillCd:0, skillTimer:0, isDashing:false, isShielded:false, isTimeStopped:false, invincibleTimer:0 };
     const MAP_LIMIT = 4000;
 
@@ -422,7 +425,6 @@
     } catch(e){}
     function saveGame() { localStorage.setItem('stellarBreakoutSave_v15', JSON.stringify(saveData)); updateMenuCoins(); }
 
-    // 🌟 全新大招資料庫 (六種大招)
     const SKILL_DB = {
         dash: { name:'空間摺疊', cd:300, duration:15, color:'#a78bfa', desc:'瞬間無敵加速，對沿途敵人造成傷害。' },
         shield: { name:'絕對防禦', cd:480, duration:180, color:'#facc15', desc:'產生能量護盾，無敵並反彈傷害。' },
@@ -436,7 +438,6 @@
     const WEAPON_DB = { blaster: { name:'前鋒機砲', icon:'🔫', maxLevel:8, evoReq:'cooldown', evoName:'裂空者', evoIcon:'🌠', desc:['發射彈道','額外1個','傷害提高','額外1個','傷害提高','速度加快','穿透','冷卻縮短'] }, laser: { name:'脈衝雷射', icon:'⚡', maxLevel:8, evoReq:'damage', evoName:'天罰陣列', evoIcon:'🛰️', desc:['鎖定最近','傷害提高','冷卻縮短','傷害提高','速度加快','冷卻縮短','傷害提高','極速掃射'] }, drone: { name:'護衛無人機', icon:'🛸', maxLevel:8, evoReq:'proj_speed', evoName:'星塵結界', evoIcon:'💫', desc:['環繞機體','傷害提高','額外1台','速度提高','範圍擴大','額外1台','傷害提高','終極防禦'] }, plasma: { name:'電漿爆破', icon:'🔮', maxLevel:8, evoReq:'area', evoName:'超新星', evoIcon:'🌌', desc:['發射爆炸球','範圍擴大','額外1個','傷害提高','冷卻縮短','額外1個','範圍擴大','牽引黑洞'] }, aura: { name:'輻射力場', icon:'🌀', maxLevel:8, evoReq:'magnet', evoName:'絕對領域', evoIcon:'💠', desc:['近身傷害','範圍擴大','頻率加快','傷害提高','範圍擴大','頻率加快','傷害提高','絞肉機'] }, bomb: { name:'櫻桃炸彈', icon:'🍒', maxLevel:8, evoReq:'hp', evoName:'核聚變彈', evoIcon:'☢️', desc:['投擲炸彈','範圍擴大','冷卻縮短','額外1個','傷害提高','範圍擴大','額外1個','核爆'] }, blade: { name:'光束斬艦刀', icon:'🗡️', maxLevel:8, evoReq:'regen', evoName:'等離子光劍', evoIcon:'⚔️', desc:['揮出光刃','傷害提高','範圍擴大','冷卻縮短','傷害提高','範圍擴大','冷卻縮短','巨型光劍'] }, mine: { name:'定時機雷', icon:'💣', maxLevel:8, evoReq:'duration', evoName:'反物質地雷', evoIcon:'💥', desc:['原地布雷','傷害提高','額外1個','範圍擴大','傷害提高','冷卻縮短','範圍擴大','連鎖毀滅'] } };
     const PASSIVE_DB = { cooldown: {name:'冷卻核心',icon:'❄️',maxLevel:5,desc:'冷卻縮短8%'}, damage: {name:'高能晶片',icon:'🔥',maxLevel:5,desc:'傷害提高10%'}, proj_speed: {name:'超導軌道',icon:'🛤️',maxLevel:5,desc:'速度加快10%'}, area: {name:'廣域雷達',icon:'📡',maxLevel:5,desc:'範圍擴大10%'}, magnet: {name:'牽引網',icon:'🧲',maxLevel:5,desc:'拾取範圍25%'}, hp: {name:'裝甲塗層',icon:'🛡️',maxLevel:5,desc:'最大生命20%'}, regen: {name:'奈米修復',icon:'🩹',maxLevel:5,desc:'5秒恢復1生命'}, duration: {name:'持久電池',icon:'🔋',maxLevel:5,desc:'持續延長15%'} };
     
-    // 🧬 綁定專屬大招
     const CHARACTERS = [ 
         { id:'ranger', name:'安東尼奧', icon:'🧑‍🚀', hp:100, speed:4.0, damage:1.0, weapon:'blaster', skill:'dash', desc:'標準戰機。每 10 級提升 10% 傷害。' }, 
         { id:'heavy', name:'格羅克', icon:'🦍', hp:180, speed:3.0, damage:0.8, weapon:'drone', skill:'shield', desc:'重裝坦克。高血量，緩慢。' }, 
@@ -597,6 +598,7 @@
         let c=CHARACTERS[selectedCharIndex]; 
         player={size:16,speed:c.speed+(saveData.upgrades.speed||0)*0.5,hp:c.hp+(saveData.upgrades.hp||0)*10,maxHp:c.hp+(saveData.upgrades.hp||0)*10,exp:0,maxExp:5,level:1,angle:-Math.PI/2,lastFacingX:1,lastFacingY:0,damageFlash:0,weapons:{},passives:{},skillCd:0,skillTimer:0,isDashing:false,isShielded:false,isTimeStopped:false,invincibleTimer:0}; 
         calcStats(); acquireWeapon(c.weapon); 
+        
         worldX=0;worldY=0;score=0;frameCount=0;gameSeconds=0;collectedCoins=0;screenShake=0;deathTimer=0; pendingLevelUps=0; 
         enemies=[];bullets=[];gems=[];coinsArr=[];floatTexts=[];particles=[];destructibles=[];consumables=[]; destructiblesDestroyed=0;bossSpawned=false;currentBoss=null;joystickTouchId=null;isTouching=false;touchVector={x:0,y:0}; 
         
@@ -713,7 +715,36 @@
         let distC=Math.hypot(worldX,worldY), rw=document.getElementById('radiation-warning');
         if(distC>MAP_LIMIT){
             if(rw) rw.style.display='flex';
-            if(frameCount%30===0){ soundHit(); player.hp-=5; player.damageFlash=5; screenShake=Math.min(screenShake+2,5); if(player.hp<=0){gameOver(false);return;} }
+            if(frameCount%30===0){ soundHit(); player.hp-=5; player.damageFlash=5; screenShake=Math.min(screenShake+2,5); if(player.hp<=0){
+                // 💥 觸發死亡與生成玻璃裂痕
+                gameState = 'dying'; deathTimer = 15; screenShake = 120; deathShockwaveRadius = 1; deathFlashAlpha = 1;
+                document.getElementById('game-ui').classList.add('hidden');
+                spawnParticles(worldX, worldY, '#38bdf8', 150); spawnParticles(worldX, worldY, '#facc15', 100); spawnParticles(worldX, worldY, '#ef4444', 100);
+                
+                glassCracks = [];
+                let numCracks = 7 + Math.floor(Math.random()*4);
+                for(let i=0; i<numCracks; i++){
+                    let a = Math.random() * Math.PI * 2;
+                    let len = Math.max(canvas.width, canvas.height) * (0.6 + Math.random()*0.4);
+                    let segs = [];
+                    let cx = 0, cy = 0;
+                    let segCount = 4 + Math.floor(Math.random()*4);
+                    for(let j=0; j<segCount; j++){
+                        let step = len/segCount;
+                        cx += Math.cos(a + (Math.random()-0.5)*0.8) * step;
+                        cy += Math.sin(a + (Math.random()-0.5)*0.8) * step;
+                        segs.push({x:cx, y:cy});
+                        if(Math.random() < 0.4) {
+                            let ba = a + (Math.random()>0.5?1:-1) * (0.8 + Math.random()*0.5);
+                            let blen = step * (0.8+Math.random()*0.6);
+                            segs.push({branch:true, x:cx + Math.cos(ba)*blen, y:cy + Math.sin(ba)*blen, px:cx, py:cy});
+                        }
+                    }
+                    glassCracks.push(segs);
+                }
+                glassCrackCenter = {x: (Math.random()-0.5)*80, y: (Math.random()-0.5)*80};
+                return;
+            } }
         } else { if(rw) rw.style.display='none'; }
 
         // 武器發射
@@ -963,9 +994,33 @@
         if(dt > 0){
             soundHit(); player.hp -= dt; player.damageFlash = 10; player.invincibleTimer = 30; screenShake = Math.min(screenShake+10, 20);
             if(player.hp <= 0 && gameState === 'playing'){
+                // 💥 觸發死亡與生成玻璃裂痕
                 gameState = 'dying'; deathTimer = 15; screenShake = 120; deathShockwaveRadius = 1; deathFlashAlpha = 1;
                 document.getElementById('game-ui').classList.add('hidden');
                 spawnParticles(worldX, worldY, '#38bdf8', 150); spawnParticles(worldX, worldY, '#facc15', 100); spawnParticles(worldX, worldY, '#ef4444', 100);
+                
+                glassCracks = [];
+                let numCracks = 7 + Math.floor(Math.random()*4);
+                for(let i=0; i<numCracks; i++){
+                    let a = Math.random() * Math.PI * 2;
+                    let len = Math.max(canvas.width, canvas.height) * (0.6 + Math.random()*0.4);
+                    let segs = [];
+                    let cx = 0, cy = 0;
+                    let segCount = 4 + Math.floor(Math.random()*4);
+                    for(let j=0; j<segCount; j++){
+                        let step = len/segCount;
+                        cx += Math.cos(a + (Math.random()-0.5)*0.8) * step;
+                        cy += Math.sin(a + (Math.random()-0.5)*0.8) * step;
+                        segs.push({x:cx, y:cy});
+                        if(Math.random() < 0.4) {
+                            let ba = a + (Math.random()>0.5?1:-1) * (0.8 + Math.random()*0.5);
+                            let blen = step * (0.8+Math.random()*0.6);
+                            segs.push({branch:true, x:cx + Math.cos(ba)*blen, y:cy + Math.sin(ba)*blen, px:cx, py:cy});
+                        }
+                    }
+                    glassCracks.push(segs);
+                }
+                glassCrackCenter = {x: (Math.random()-0.5)*80, y: (Math.random()-0.5)*80};
                 return;
             }
         }
@@ -1062,7 +1117,98 @@
         if(gameState==='dying'){
             ctx.save(); ctx.translate(canvas.width/2,canvas.height/2); ctx.beginPath(); ctx.arc(0,0,Math.max(1,deathShockwaveRadius),0,Math.PI*2); ctx.lineWidth=Math.max(1,40-deathShockwaveRadius/25); ctx.strokeStyle=`rgba(255,255,255,${Math.max(0,1-deathShockwaveRadius/1500)})`; ctx.stroke(); ctx.beginPath(); ctx.arc(0,0,Math.max(1,deathShockwaveRadius*0.8),0,Math.PI*2); ctx.fillStyle=`rgba(239,68,68,${Math.max(0,0.4-deathShockwaveRadius/1200)})`; ctx.fill(); ctx.restore();
             if(deathFlashAlpha>0.01){ctx.fillStyle=`rgba(255,255,255,${deathFlashAlpha})`;ctx.fillRect(0,0,canvas.width,canvas.height);} let fa=Math.max(0,Math.min(0.8,(15-deathTimer)/15)); ctx.fillStyle=`rgba(159,18,57,${fa})`; ctx.fillRect(0,0,canvas.width,canvas.height);
-            let ta=Math.max(0,Math.min(1,(15-deathTimer)/5)); ctx.font='900 48px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; let gx=deathTimer<12&&Math.random()<0.5?(Math.random()-0.5)*25:0; ctx.fillStyle=`rgba(56,189,248,${ta*0.7})`; ctx.fillText("CRITICAL DAMAGE",canvas.width/2+gx-4,canvas.height/2-50); ctx.fillStyle=`rgba(244,63,94,${ta*0.7})`; ctx.fillText("CRITICAL DAMAGE",canvas.width/2+gx+4,canvas.height/2-50); ctx.fillStyle=`rgba(255,255,255,${ta})`; ctx.shadowBlur=20; ctx.shadowColor='#e11d48'; ctx.fillText("CRITICAL DAMAGE",canvas.width/2+gx,canvas.height/2-50); ctx.shadowBlur=0; ctx.font='bold 20px sans-serif'; ctx.fillStyle=`rgba(148,163,184,${ta})`; ctx.fillText(">> CONNECTION LOST <<",canvas.width/2+gx,canvas.height/2); ctx.restore();
+            
+            // 🎯 【修改核心】：響應式字體與實體玻璃裂痕特效
+            let ta = Math.max(0, Math.min(1, (15-deathTimer)/5)); 
+            
+            // 強制降級字體最大值，確保在窄手機絕對安全，並強制加粗
+            let mainFontSize = Math.max(16, Math.min(28, canvas.width * 0.075)); 
+            let subFontSize = Math.max(10, Math.min(16, canvas.width * 0.04));
+
+            // 🕸️ 繪製玻璃裂痕特效 (Glass Cracks)
+            if(glassCracks && glassCracks.length > 0) {
+                ctx.save();
+                ctx.translate(canvas.width/2 + glassCrackCenter.x, canvas.height/2 + glassCrackCenter.y);
+                ctx.strokeStyle = `rgba(220, 240, 255, ${ta * 0.85})`;
+                ctx.lineWidth = 1.5 + ta;
+                ctx.lineJoin = 'miter';
+                ctx.beginPath();
+                glassCracks.forEach(crack => {
+                    ctx.moveTo(0,0);
+                    crack.forEach(seg => {
+                        if(seg.branch) {
+                            ctx.moveTo(seg.px, seg.py);
+                            ctx.lineTo(seg.x, seg.y);
+                            ctx.moveTo(seg.px, seg.py);
+                        } else {
+                            ctx.lineTo(seg.x, seg.y);
+                        }
+                    });
+                });
+                ctx.stroke();
+                
+                // 中心碎裂冰花/玻璃渣
+                ctx.fillStyle = `rgba(255, 255, 255, ${ta * 0.5})`;
+                ctx.beginPath();
+                for(let i=0; i<6; i++) {
+                    let ba = (i/6)*Math.PI*2 + Math.random()*0.5;
+                    let br = 10 + Math.random()*25;
+                    if(i===0) ctx.moveTo(Math.cos(ba)*br, Math.sin(ba)*br);
+                    else ctx.lineTo(Math.cos(ba)*br, Math.sin(ba)*br);
+                }
+                ctx.closePath(); ctx.fill();
+                ctx.restore();
+            }
+
+            // 高頻隨機雜訊變數
+            let isGlitch = deathTimer<12 && Math.random()<0.6;
+            let gx = isGlitch ? (Math.random()-0.5)*30 : 0; 
+            let gy = isGlitch ? (Math.random()-0.5)*15 : 0; 
+
+            // 多層殘影與描邊加粗的 Helper
+            let drawTextLayer = (txt, y, fSize, glow, isMain) => {
+                ctx.font = `900 ${fSize}px 'Arial Black', Impact, 'Segoe UI Black', sans-serif`;
+                ctx.fillStyle = `rgba(56,189,248,${ta*0.8})`; ctx.fillText(txt, canvas.width/2+gx-3, y+gy); 
+                ctx.fillStyle = `rgba(244,63,94,${ta*0.8})`; ctx.fillText(txt, canvas.width/2+gx+3, y+gy); 
+                ctx.fillStyle = `rgba(255,255,255,${ta})`; 
+                if(glow) { ctx.shadowBlur=20; ctx.shadowColor='#e11d48'; }
+                ctx.fillText(txt, canvas.width/2+gx, y+gy); 
+                
+                // 強制描白邊加粗
+                if(isMain) {
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeStyle = `rgba(255,255,255,${ta})`;
+                    ctx.strokeText(txt, canvas.width/2+gx, y+gy);
+                }
+                ctx.shadowBlur = 0;
+            };
+
+            ctx.textAlign='center'; ctx.textBaseline='middle'; 
+            let ty = canvas.height/2 - 40;
+            
+            // 繪製底層主文字
+            drawTextLayer("CRITICAL DAMAGE", ty, mainFontSize, true, true);
+
+            // 裂痕切割特效 (只在雜訊發作時觸發)
+            if(isGlitch) {
+                ctx.save();
+                ctx.beginPath();
+                let sliceH = mainFontSize * 0.4;
+                let sliceY = ty - mainFontSize/2 + Math.random() * mainFontSize;
+                ctx.rect(0, sliceY, canvas.width, sliceH);
+                ctx.clip(); // 建立裁切遮罩
+                ctx.translate((Math.random()-0.5)*40, 0); // 裂開的劇烈左右錯位
+                drawTextLayer("CRITICAL DAMAGE", ty, mainFontSize, false, true);
+                
+                // 純白掃描雜訊線
+                ctx.fillStyle=`rgba(255,255,255,${Math.random()})`;
+                ctx.fillRect(0, sliceY + Math.random()*sliceH, canvas.width, 2 + Math.random()*3);
+                ctx.restore();
+            }
+
+            ctx.font = `900 ${subFontSize}px 'Arial Black', Impact, sans-serif`; 
+            ctx.fillStyle = `rgba(148,163,184,${ta})`; 
+            ctx.fillText(">> CONNECTION LOST <<", canvas.width/2+gx*0.5, canvas.height/2 + 10 + gy*0.5); 
         }
     }
     
