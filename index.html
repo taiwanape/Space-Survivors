@@ -353,7 +353,8 @@
     // 🔥 新增玻璃裂痕全域變數
     let glassCracks = [], glassCrackCenter = {x:0, y:0};
 
-    let player = { size:16, hp:0, maxHp:0, exp:0, maxExp:5, level:1, speed:4, angle:-Math.PI/2, lastFacingX:1, lastFacingY:0, damageFlash:0, weapons:{}, passives:{}, skillCd:0, skillTimer:0, isDashing:false, isShielded:false, isTimeStopped:false, invincibleTimer:0 };
+    // 🎯 修正開局物理向量，讓戰機與技能起手統一朝正上方 (0, -1)
+    let player = { size:16, hp:0, maxHp:0, exp:0, maxExp:5, level:1, speed:4, angle:-Math.PI/2, lastFacingX:0, lastFacingY:-1, damageFlash:0, weapons:{}, passives:{}, skillCd:0, skillTimer:0, isDashing:false, isShielded:false, isTimeStopped:false, invincibleTimer:0 };
     const MAP_LIMIT = 4000;
 
     for(let i=0; i<200; i++) stars.push({x:Math.random()*3000, y:Math.random()*3000, size:Math.random()*1.5+0.5, depth:Math.random()*0.4+0.1}); 
@@ -596,7 +597,10 @@
     function startGame() { 
         soundClick(); hideAllModals(); 
         let c=CHARACTERS[selectedCharIndex]; 
-        player={size:16,speed:c.speed+(saveData.upgrades.speed||0)*0.5,hp:c.hp+(saveData.upgrades.hp||0)*10,maxHp:c.hp+(saveData.upgrades.hp||0)*10,exp:0,maxExp:5,level:1,angle:-Math.PI/2,lastFacingX:1,lastFacingY:0,damageFlash:0,weapons:{},passives:{},skillCd:0,skillTimer:0,isDashing:false,isShielded:false,isTimeStopped:false,invincibleTimer:0}; 
+        
+        // 🎯 [V5.0.3 修正] 確保開局的物理與視覺方向絕對統一為正上方 (X:0, Y:-1, Angle:-90度)
+        player={size:16,speed:c.speed+(saveData.upgrades.speed||0)*0.5,hp:c.hp+(saveData.upgrades.hp||0)*10,maxHp:c.hp+(saveData.upgrades.hp||0)*10,exp:0,maxExp:5,level:1,angle:-Math.PI/2,lastFacingX:0,lastFacingY:-1,damageFlash:0,weapons:{},passives:{},skillCd:0,skillTimer:0,isDashing:false,isShielded:false,isTimeStopped:false,invincibleTimer:0}; 
+        
         calcStats(); acquireWeapon(c.weapon); 
         
         worldX=0;worldY=0;score=0;frameCount=0;gameSeconds=0;collectedCoins=0;screenShake=0;deathTimer=0; pendingLevelUps=0; 
