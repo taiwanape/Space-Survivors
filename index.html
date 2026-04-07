@@ -614,8 +614,13 @@
     function calcStats() { let c=CHARACTERS[selectedCharIndex]; globalDmgMult=c.damage+(saveData.upgrades.damage||0)*0.05; globalCdMult=1; globalProjSpeedMult=1; globalAreaMult=1; globalDurationMult=1; if(player.passives.damage)globalDmgMult+=player.passives.damage.level*0.1; if(player.passives.cooldown)globalCdMult-=player.passives.cooldown.level*0.08; if(player.passives.proj_speed)globalProjSpeedMult+=player.passives.proj_speed.level*0.1; if(player.passives.area)globalAreaMult+=player.passives.area.level*0.1; if(player.passives.duration)globalDurationMult+=player.passives.duration.level*0.15; player.pickupRadius=100*(1+(saveData.upgrades.magnet||0)*0.1); if(player.passives.magnet)player.pickupRadius*=(1+player.passives.magnet.level*0.25); globalCdMult=Math.max(0.1,globalCdMult); if(c.id==='ranger')globalDmgMult+=Math.floor(player.level/10)*0.1; if(c.id==='engineer')globalDurationMult+=0.2; if(c.id==='scavenger')player.pickupRadius+=50; }
     
     function updateInventoryUI() { let f=(rId,src, isP)=>{ let r=document.getElementById(rId); if(!r)return; r.innerHTML=''; for(let i=0;i<6;i++){ let ks=Object.keys(src), d=document.createElement('div'); if(i<ks.length){ let id=ks[i], w=src[id], db=isP?PASSIVE_DB[id]:WEAPON_DB[id]; d.className=`weapon-slot ${w.isEvolved?'evolved':''} ${isP?'passive':''}`; d.innerHTML=`${db.icon}<div class="lvl-badge">${w.isEvolved?'M':w.level}</div>`; }else{ d.className=`weapon-slot empty ${isP?'passive':''}`; } r.appendChild(d); } }; f('weapon-row',player.weapons, false); f('passive-row',player.passives, true); f('pause-weapon-row',player.weapons, false); f('pause-passive-row',player.passives, true); }
-    function acquireWeapon(id) { if(id==='blaster')player.weapons.blaster={level:1,baseDamage:15,baseCooldown:40,baseSpeed:14,count:1,timer:0,isEvolved:false}; if(id==='laser')player.weapons.laser={level:1,baseDamage:10,baseCooldown:50,baseSpeed:15,timer:0,isEvolved:false}; if(id==='drone')player.weapons.drone={level:1,baseDamage:10,count:2,baseRadius:50,baseSpeed:0.05,isEvolved:false}; if(id==='plasma')player.weapons.plasma={level:1,baseDamage:20,baseCooldown:80,baseSpeed:5,count:2,baseAoe:30,timer:0,isEvolved:false}; if(id==='aura')player.weapons.aura={level:1,baseDamage:6,baseRadius:35,baseTickRate:20,timer:0,isEvolved:false}; if(id==='bomb')player.weapons.bomb={level:1,baseDamage:25,baseCooldown:100,baseSpeed:6,count:1,baseAoe:50,timer:0,isEvolved:false}; if(id==='blade')player.weapons.blade={level:1,baseDamage:18,baseCooldown:60,baseSpeed:8,count:1,baseAoe:40,timer:0,isEvolved:false}; if(id==='mine')player.weapons.mine={level:1,baseDamage:35,baseCooldown:90,count:1,baseAoe:50,timer:0,isEvolved:false}; if(id==='missile')player.weapons.missile={level:1,baseDamage:25,baseCooldown:90,baseSpeed:8,count:1,timer:0,isEvolved:false}; updateInventoryUI(); calcStats(); }
-    function upgradeWeapon(id) { let w=player.weapons[id]; w.level++; if(id==='blaster'){if(w.level===2)w.count=2;if(w.level===3)w.baseDamage+=4;if(w.level===4)w.count=3;if(w.level===5)w.baseDamage+=5;if(w.level===6)w.baseSpeed+=3;if(w.level===7)w.baseDamage+=6;if(w.level===8)w.baseCooldown-=10;} if(id==='laser'){if(w.level===2)w.baseDamage+=3;if(w.level===3)w.baseCooldown-=5;if(w.level===4)w.baseDamage+=4;if(w.level===5)w.baseSpeed+=2;if(w.level===6)w.baseCooldown-=5;if(w.level===7)w.baseDamage+=5;if(w.level===8)w.baseCooldown-=10;} if(id==='drone'){if(w.level===2)w.baseDamage+=2;if(w.level===3)w.count=3;if(w.level===4)w.baseSpeed+=0.02;if(w.level===5)w.baseRadius+=10;if(w.level===6)w.count=4;if(w.level===7)w.baseDamage+=3;if(w.level===8)w.count=5;} if(id==='plasma'){if(w.level===2)w.baseAoe+=10;if(w.level===3)w.count=3;if(w.level===4)w.baseDamage+=5;if(w.level===5)w.baseCooldown-=10;if(w.level===6)w.count=4;if(w.level===7)w.baseAoe+=10;if(w.level===8)w.baseCooldown-=15;} if(id==='aura'){if(w.level===2)w.baseRadius+=10;if(w.level===3)w.baseTickRate-=5;if(w.level===4)w.baseDamage+=2;if(w.level===5)w.baseRadius+=10;if(w.level===6)w.baseTickRate-=5;if(w.level===7)w.baseDamage+=2;if(w.level===8)w.baseRadius+=15;} if(id==='bomb'){if(w.level===2)w.baseAoe+=10;if(w.level===3)w.baseCooldown-=10;if(w.level===4)w.count=2;if(w.level===5)w.baseDamage+=10;if(w.level===6)w.baseAoe+=15;if(w.level===7)w.count=3;if(w.level===8)w.baseCooldown-=15;} if(id==='blade'){if(w.level===2)w.baseDamage+=5;if(w.level===3)w.baseAoe+=10;if(w.level===4)w.baseCooldown-=5;if(w.level===5)w.baseDamage+=5;if(w.level===6)w.baseAoe+=15;if(w.level===7)w.baseCooldown-=5;if(w.level===8)w.baseDamage+=10;} if(id==='mine'){if(w.level===2)w.baseDamage+=10;if(w.level===3)w.count=2;if(w.level===4)w.baseAoe+=10;if(w.level===5)w.baseDamage+=10;if(w.level===6)w.baseCooldown-=10;if(w.level===7)w.baseAoe+=15;if(w.level===8)w.count=3;} if(id==='missile'){if(w.level===2)w.baseDamage+=5;if(w.level===3)w.baseCooldown-=10;if(w.level===4)w.count=2;if(w.level===5)w.baseSpeed+=2;if(w.level===6)w.baseCooldown-=10;if(w.level===7)w.baseDamage+=10;if(w.level===8)w.count=3;} updateInventoryUI(); }
+    
+    // 🎯 武器基礎傷害直接暴增 10 倍！
+    function acquireWeapon(id) { if(id==='blaster')player.weapons.blaster={level:1,baseDamage:350,baseCooldown:40,baseSpeed:14,count:1,timer:0,isEvolved:false}; if(id==='laser')player.weapons.laser={level:1,baseDamage:250,baseCooldown:50,baseSpeed:15,timer:0,isEvolved:false}; if(id==='drone')player.weapons.drone={level:1,baseDamage:250,count:2,baseRadius:50,baseSpeed:0.05,isEvolved:false}; if(id==='plasma')player.weapons.plasma={level:1,baseDamage:450,baseCooldown:80,baseSpeed:5,count:2,baseAoe:30,timer:0,isEvolved:false}; if(id==='aura')player.weapons.aura={level:1,baseDamage:150,baseRadius:35,baseTickRate:20,timer:0,isEvolved:false}; if(id==='bomb')player.weapons.bomb={level:1,baseDamage:600,baseCooldown:100,baseSpeed:6,count:1,baseAoe:50,timer:0,isEvolved:false}; if(id==='blade')player.weapons.blade={level:1,baseDamage:450,baseCooldown:60,baseSpeed:8,count:1,baseAoe:40,timer:0,isEvolved:false}; if(id==='mine')player.weapons.mine={level:1,baseDamage:800,baseCooldown:90,count:1,baseAoe:50,timer:0,isEvolved:false}; if(id==='missile')player.weapons.missile={level:1,baseDamage:550,baseCooldown:90,baseSpeed:8,count:1,timer:0,isEvolved:false}; updateInventoryUI(); calcStats(); }
+    
+    // 🎯 武器升級傷害幅度全部暴增 10 倍！
+    function upgradeWeapon(id) { let w=player.weapons[id]; w.level++; if(id==='blaster'){if(w.level===2)w.count=2;if(w.level===3)w.baseDamage+=100;if(w.level===4)w.count=3;if(w.level===5)w.baseDamage+=120;if(w.level===6)w.baseSpeed+=3;if(w.level===7)w.baseDamage+=150;if(w.level===8)w.baseCooldown-=10;} if(id==='laser'){if(w.level===2)w.baseDamage+=80;if(w.level===3)w.baseCooldown-=5;if(w.level===4)w.baseDamage+=100;if(w.level===5)w.baseSpeed+=2;if(w.level===6)w.baseCooldown-=5;if(w.level===7)w.baseDamage+=120;if(w.level===8)w.baseCooldown-=10;} if(id==='drone'){if(w.level===2)w.baseDamage+=50;if(w.level===3)w.count=3;if(w.level===4)w.baseSpeed+=0.02;if(w.level===5)w.baseRadius+=10;if(w.level===6)w.count=4;if(w.level===7)w.baseDamage+=80;if(w.level===8)w.count=5;} if(id==='plasma'){if(w.level===2)w.baseAoe+=10;if(w.level===3)w.count=3;if(w.level===4)w.baseDamage+=150;if(w.level===5)w.baseCooldown-=10;if(w.level===6)w.count=4;if(w.level===7)w.baseAoe+=10;if(w.level===8)w.baseCooldown-=15;} if(id==='aura'){if(w.level===2)w.baseRadius+=10;if(w.level===3)w.baseTickRate-=5;if(w.level===4)w.baseDamage+=50;if(w.level===5)w.baseRadius+=10;if(w.level===6)w.baseTickRate-=5;if(w.level===7)w.baseDamage+=80;if(w.level===8)w.baseRadius+=15;} if(id==='bomb'){if(w.level===2)w.baseAoe+=10;if(w.level===3)w.baseCooldown-=10;if(w.level===4)w.count=2;if(w.level===5)w.baseDamage+=250;if(w.level===6)w.baseAoe+=15;if(w.level===7)w.count=3;if(w.level===8)w.baseCooldown-=15;} if(id==='blade'){if(w.level===2)w.baseDamage+=120;if(w.level===3)w.baseAoe+=10;if(w.level===4)w.baseCooldown-=5;if(w.level===5)w.baseDamage+=150;if(w.level===6)w.baseAoe+=15;if(w.level===7)w.baseCooldown-=5;if(w.level===8)w.baseDamage+=200;} if(id==='mine'){if(w.level===2)w.baseDamage+=250;if(w.level===3)w.count=2;if(w.level===4)w.baseAoe+=10;if(w.level===5)w.baseDamage+=300;if(w.level===6)w.baseCooldown-=10;if(w.level===7)w.baseAoe+=15;if(w.level===8)w.count=3;} if(id==='missile'){if(w.level===2)w.baseDamage+=120;if(w.level===3)w.baseCooldown-=10;if(w.level===4)w.count=2;if(w.level===5)w.baseSpeed+=2;if(w.level===6)w.baseCooldown-=10;if(w.level===7)w.baseDamage+=200;if(w.level===8)w.count=3;} updateInventoryUI(); }
+    
     function evolveWeapon(id) { let w=player.weapons[id]; w.isEvolved=true; if(id==='blaster'){w.count=5;w.baseCooldown=15;w.baseDamage*=1.2;w.baseSpeed=20;} if(id==='laser'){w.baseCooldown=20;w.baseDamage*=1.5;w.baseAoe=50;} if(id==='drone'){w.count=8;w.baseSpeed=0.15;w.baseRadius=80;w.baseDamage*=1.5;} if(id==='plasma'){w.count=1;w.baseCooldown=120;w.baseSpeed=2;w.baseAoe=120;w.baseDamage*=3;} if(id==='aura'){w.baseTickRate=12;w.baseRadius=70;w.baseDamage*=1.5;} if(id==='bomb'){w.count=1;w.baseCooldown=200;w.baseAoe=180;w.baseDamage*=5;} if(id==='blade'){w.baseCooldown=30;w.baseAoe=90;w.baseDamage*=2;w.baseSpeed=12;} if(id==='mine'){w.count=2;w.baseCooldown=60;w.baseAoe=120;w.baseDamage*=3;} if(id==='missile'){w.count=1;w.baseCooldown=150;w.baseDamage*=4;w.baseSpeed=10;} updateInventoryUI(); checkAchievement('evolve_weapon'); }
     function acquirePassive(id) { player.passives[id]={level:1}; updateInventoryUI(); calcStats(); }
     function upgradePassive(id) { player.passives[id].level++; updateInventoryUI(); calcStats(); }
@@ -879,23 +884,27 @@
             if (!player.isTimeStopped) hz.timer--;
             
             if (hz.state === 'warning' && hz.timer <= 0) {
-                hz.state = 'strike'; hz.timer = 15; // 轟炸持續 15 幀
-                soundPlasmaStrike(); screenShake = Math.max(screenShake, 18); // 👉 改用專屬音效
+                hz.state = 'strike'; hz.timer = 15; 
+                soundPlasmaStrike(); screenShake = Math.max(screenShake, 25); 
+                
+                // 🎯 陷阱絕對秒殺
+                enemies.forEach(e => {
+                    if (!e.dead && Math.hypot(e.x - hz.x, e.y - hz.y) < hz.radius + e.size) {
+                        let dmg = (e.maxHp * 10) + 9999999;
+                        e.hp -= dmg; 
+                        e.damageFlash = 10;
+                        // 👉 移除跳字
+                    }
+                });
             } else if (hz.state === 'strike' && hz.timer <= 0) {
                 hazards.splice(i, 1); continue;
             }
 
             if (hz.state === 'strike') {
-                // 玩家受傷判定
                 if (player.invincibleTimer <= 0 && !player.isDashing && !player.isShielded && Math.hypot(worldX - hz.x, worldY - hz.y) < hz.radius) {
-                    dt = Math.max(dt, 20); // 每次轟炸造成 20 點傷害
+                    // 💥 致命強化：不再是扣 20 滴血，而是瞬間扣除 50% 的最大生命值！
+                    dt = Math.max(dt, Math.floor(player.maxHp * 0.5)); 
                 }
-                // 怪物秒殺判定 (可以用來清怪)
-                enemies.forEach(e => {
-                    if (!e.dead && Math.hypot(e.x - hz.x, e.y - hz.y) < hz.radius + e.size) {
-                        e.hp -= 500; e.damageFlash = 10;
-                    }
-                });
             }
         }
 
@@ -1060,6 +1069,70 @@
                         let aa = Math.atan2(e.y - worldY, e.x - worldX);
                         e.knockbackX += Math.cos(aa) * 0.5 * e.kbResist; e.knockbackY += Math.sin(aa) * 0.5 * e.kbResist;
                         e.damageFlash = 8; screenShake = Math.max(screenShake, 2); soundHit();
+                        // 👉 移除跳字
+                    }
+                }
+            }
+            if(player.weapons.drone){
+                let w = player.weapons.drone;
+                orbitals.forEach(o => {
+                    if(Math.hypot(o.x - e.x, o.y - e.y) < e.size + 15){
+                        if(!e.droneCd || e.droneCd <= 0){
+                            e.hp -= w.baseDamage * globalDmgMult; e.damageFlash = 8;
+                            let ka = Math.atan2(e.y - o.y, e.x - o.x);
+                            e.knockbackX += Math.cos(ka) * 4 * e.kbResist; e.knockbackY += Math.sin(ka) * 4 * e.kbResist;
+                            spawnParticles(o.x, o.y, w.isEvolved ? '#c084fc' : '#facc15', 3);
+                            screenShake = Math.max(screenShake, 3); e.droneCd = Math.max(10, Math.floor(15 * globalCdMult)); soundHit();
+                            // 👉 移除跳字
+                        }
+                    }
+                });
+                if(e.droneCd > 0) e.droneCd--;
+            }
+
+            for (let j = bullets.length - 1; j >= 0; j--) {
+                let b = bullets[j];
+                if(b.dead || b.type === 'bomb' || b.type === 'mine') continue;
+                let hr = b.aoe || 15;
+                if(Math.hypot(b.x - e.x, b.y - e.y) < e.size + hr){
+                    let ba = Math.atan2(b.vy, b.vx);
+                    if(b.type === 'plasma'){
+                        if(!b.isEvo){
+                            spawnParticles(b.x, b.y, '#d946ef', 10); let ar = b.aoe;
+                            enemies.forEach(e2 => {
+                                if(!e2.dead && Math.hypot(b.x - e2.x, b.y - e2.y) < ar){
+                                    e2.hp -= b.damage;
+                                    let ea = Math.atan2(e2.y - b.y, e2.x - b.x);
+                                    e2.knockbackX += Math.cos(ea) * 4 * e2.kbResist; e2.knockbackY += Math.sin(ea) * 4 * e2.kbResist;
+                                    e2.damageFlash = 6; soundHit();
+                                    // 👉 移除跳字
+                                }
+                            });
+                            b.dead = true; screenShake = Math.max(screenShake, 5);
+                        } else {
+                            if(frameCount % 10 === 0){
+                                spawnParticles(e.x, e.y, '#d946ef', 2); e.hp -= b.damage;
+                                let ea = Math.atan2(e.y - b.y, e.x - b.x);
+                                e.knockbackX += Math.cos(ea) * 0.5 * e.kbResist; e.knockbackY += Math.sin(ea) * 0.5 * e.kbResist;
+                                e.damageFlash = 8; screenShake = Math.max(screenShake, 2); soundHit();
+                                // 👉 移除跳字
+                            }
+                        }
+                    }
+                    else if(b.type === 'laser_evo'){ e.hp -= b.damage; e.damageFlash = 8; spawnParticles(e.x, e.y, '#38bdf8', 5); screenShake = Math.max(screenShake, 2); soundHit(); }
+                    else if(b.type === 'blade'){
+                        if(frameCount % 5 === 0){ e.hp -= b.damage; e.damageFlash = 8; e.knockbackX += Math.cos(b.angle) * 3 * e.kbResist; e.knockbackY += Math.sin(b.angle) * 3 * e.kbResist; spawnParticles(e.x, e.y, '#fbbf24', 3); screenShake = Math.max(screenShake, 3); soundHit(); }
+                    } else if(b.type === 'missile' || b.type === 'missile_evo'){
+                        e.hp -= b.damage; e.damageFlash = 6; soundHit();
+                        if(!b.isEvo) b.dead = true;
+                    } else {
+                        e.hp -= b.damage;
+                        let col = b.type === 'blaster' ? '#facc15' : '#38bdf8', kf = b.type === 'blaster' ? 3 : 1;
+                        e.knockbackX += Math.cos(ba) * kf * e.kbResist; e.knockbackY += Math.sin(ba) * kf * e.kbResist;
+                        e.damageFlash = 8; spawnParticles(b.x, b.y, col, 3); 
+                        if(!b.isEvo) b.dead = true; 
+                        screenShake = Math.max(screenShake, 2); soundHit();
+                        // 👉 移除跳字
                     }
                 }
             }
@@ -1170,7 +1243,8 @@
                 spawnParticles(worldX, worldY, '#38bdf8', 150); spawnParticles(worldX, worldY, '#facc15', 100); spawnParticles(worldX, worldY, '#ef4444', 100);
                 
                 glassCracks = [];
-                let numCracks = 7 + Math.floor(Math.random()*4);
+                // 🎯 裂痕視覺強化：數量增多
+                let numCracks = 10 + Math.floor(Math.random()*6);
                 for(let i=0; i<numCracks; i++){
                     let a = Math.random() * Math.PI * 2;
                     let len = Math.max(canvas.width, canvas.height) * (0.6 + Math.random()*0.4);
@@ -1362,7 +1436,8 @@
                 ctx.save();
                 ctx.translate(canvas.width/2 + glassCrackCenter.x, canvas.height/2 + glassCrackCenter.y);
                 ctx.strokeStyle = `rgba(220, 240, 255, ${ta * 0.85})`;
-                ctx.lineWidth = 1.5 + ta;
+                // 🎯 裂痕視覺強化：裂縫變粗
+                ctx.lineWidth = 2.5 + ta;
                 ctx.lineJoin = 'miter';
                 ctx.beginPath();
                 glassCracks.forEach(crack => {
@@ -1379,12 +1454,12 @@
                 });
                 ctx.stroke();
                 
-                // 中心碎裂冰花/玻璃渣
+                // 🎯 裂痕視覺強化：中心碎裂冰花孔洞變大
                 ctx.fillStyle = `rgba(255, 255, 255, ${ta * 0.5})`;
                 ctx.beginPath();
-                for(let i=0; i<6; i++) {
-                    let ba = (i/6)*Math.PI*2 + Math.random()*0.5;
-                    let br = 10 + Math.random()*25;
+                for(let i=0; i<8; i++) {
+                    let ba = (i/8)*Math.PI*2 + Math.random()*0.5;
+                    let br = 15 + Math.random()*35;
                     if(i===0) ctx.moveTo(Math.cos(ba)*br, Math.sin(ba)*br);
                     else ctx.lineTo(Math.cos(ba)*br, Math.sin(ba)*br);
                 }
