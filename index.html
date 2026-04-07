@@ -66,6 +66,12 @@
         .blinking-text { font-size: 18px; color: #fca5a5; animation: blink 1.5s infinite; font-weight: bold; text-shadow: 2px 2px 0 #000; margin-top: 40px; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+        /* 🌟 封面背景圖樣式 */
+        .cover-bg {
+            background: linear-gradient(to bottom, rgba(10,2,2,0.4) 0%, rgba(10,2,2,1) 100%), url('https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=1920&auto=format&fit=crop') no-repeat center center !important;
+            background-size: cover !important;
+        }
+
         /* === 模態視窗共用 (頭部、內容、底部) === */
         .modal-header { height: calc(60px + env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; padding: env(safe-area-inset-top) max(15px, env(safe-area-inset-right)) 0 max(15px, env(safe-area-inset-left)); background: #000; border-bottom: 2px solid #450a0a; flex-shrink: 0; z-index: 2; }
         .modal-header .title { font-size: 20px; font-weight: bold; color: #facc15; margin: 0; }
@@ -168,7 +174,7 @@
 
 <div id="game-container">
     <!-- 🌟 專屬封面 Splash Screen -->
-    <div id="splash-screen" class="overlay center-layout" style="z-index: 50; pointer-events: auto; background: #0a0a0a;" onclick="enterTitle()">
+    <div id="splash-screen" class="overlay center-layout cover-bg" style="z-index: 50; pointer-events: auto;" onclick="enterTitle()">
         <h1 class="mega-title">STELLAR<br>BREAKOUT</h1>
         <h2 class="sub-title">星際突圍</h2>
         <div class="blinking-text">點擊螢幕啟動系統</div>
@@ -206,7 +212,7 @@
     </div>
 
     <!-- 標題主選單 -->
-    <div id="title-screen" class="modal hidden center-layout">
+    <div id="title-screen" class="modal hidden center-layout cover-bg">
         <div class="menu-coins-display">🪙 <span id="menu-coins">0</span></div>
         <h1 class="mega-title">STELLAR<br>BREAKOUT</h1>
         <h2 class="sub-title">星際突圍</h2>
