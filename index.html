@@ -91,10 +91,8 @@
         .char-info-text { flex: 1; min-width: 0; text-align: left; display: flex; flex-direction: column; gap: 6px;}
         .char-info-text h2 { margin: 0; color: #fff; font-size: 22px; }
         
-        /* 技能與武器並排展示 */
         .char-badges { display: flex; gap: 8px; flex-wrap: wrap; }
         .char-weapon-info { display: inline-flex; align-items: center; background: #1e293b; padding: 3px 8px; border-radius: 4px; font-size: 11px; color: #cbd5e1; gap: 4px;}
-        
         .char-info-text p { margin: 2px 0 0 0; font-size: 12px; color: #94a3b8; line-height: 1.4; }
         
         .char-stats-grid { display: flex; flex-wrap: wrap; padding: 10px; font-family: monospace; font-size: 12px; background: #0a0a0a; border-radius: 0 0 8px 8px;}
@@ -102,7 +100,6 @@
         .stat-label { color: #cbd5e1; } 
         .stat-value { color: #facc15; text-align: right;}
         
-        /* 🎯 選角網格：靠左對齊 */
         .char-grid-bottom { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; width: 100%; max-width: 500px; margin-top: 5px;}
         .char-slot { background: #0f172a; border: 2px solid #334155; border-radius: 8px; width: 56px; height: 56px; display: flex; justify-content: center; align-items: center; font-size: 28px; cursor: pointer; }
         .char-slot.selected { border-color: #facc15; background: #450a0a; }
@@ -166,6 +163,7 @@
 <body>
 
 <div id="game-container">
+    <!-- 🌟 專屬封面 Splash Screen -->
     <div id="splash-screen" class="overlay center-layout cover-bg" style="z-index: 50; pointer-events: auto;" onclick="enterTitle()">
         <h1 class="mega-title">STELLAR<br>BREAKOUT</h1>
         <h2 class="sub-title">星際突圍</h2>
@@ -173,6 +171,7 @@
         <div class="creator-text">製作人：林小木</div>
     </div>
 
+    <!-- 🎯 遊戲 HUD -->
     <div id="game-ui" class="overlay hidden">
         <div id="achievement-popup">
             <div style="font-size: 20px;">🏆</div>
@@ -202,6 +201,7 @@
         <button id="dash-btn"><span>技能</span><span>準備</span></button>
     </div>
 
+    <!-- 標題主選單 -->
     <div id="title-screen" class="modal hidden center-layout cover-bg">
         <div class="menu-coins-display">🪙 <span id="menu-coins">0</span></div>
         <h1 class="mega-title">STELLAR<br>BREAKOUT</h1>
@@ -214,6 +214,7 @@
         <div class="creator-text">製作人：林小木</div>
     </div>
 
+    <!-- 選角介面 -->
     <div id="char-select-menu" class="modal hidden">
         <div class="modal-header">
             <button class="icon-btn" onclick="backToMainMenu()">BACK</button>
@@ -231,7 +232,7 @@
                                 <div class="char-weapon-info">武裝: <span id="char-weapon" style="color:#facc15;">前鋒機砲</span></div>
                                 <div class="char-weapon-info">技能: <span id="char-skill" style="color:#38bdf8;">空間摺疊</span></div>
                             </div>
-                            <p id="char-desc">駕駛標準戰機。</p>
+                            <p id="char-desc">駕駛標準戰機。每 10 級提升 10% 傷害。</p>
                         </div>
                     </div>
                 </div>
@@ -244,6 +245,7 @@
         </div>
     </div>
 
+    <!-- 地圖選擇介面 -->
     <div id="stage-select-menu" class="modal hidden">
         <div class="modal-header">
             <button class="icon-btn" onclick="goToCharSelect()">BACK</button>
@@ -256,6 +258,7 @@
         </div>
     </div>
 
+    <!-- 圖鑑系統 -->
     <div id="achievements-menu" class="modal hidden">
         <div class="modal-header">
             <button class="icon-btn" onclick="backToMainMenu()">BACK</button>
@@ -265,6 +268,7 @@
         <div class="modal-content no-footer" id="ach-list-container"></div>
     </div>
 
+    <!-- 商店系統 -->
     <div id="shop-menu" class="modal hidden">
         <div class="modal-header">
             <button class="icon-btn" onclick="backToMainMenu()">BACK</button>
@@ -274,6 +278,7 @@
         <div class="modal-content no-footer" id="shop-items-container"></div>
     </div>
 
+    <!-- 🌟 升級彈窗 -->
     <div id="level-up-modal" class="popup-overlay hidden">
         <div class="popup-box">
             <h1 class="popup-title">等級提升</h1>
@@ -281,6 +286,7 @@
         </div>
     </div>
 
+    <!-- 寶箱彈窗 -->
     <div id="chest-modal" class="popup-overlay hidden">
         <div class="popup-box" style="align-items: center; text-align: center;">
             <h1 class="popup-title" style="margin-bottom: 0;">回收物資</h1>
@@ -293,6 +299,7 @@
         </div>
     </div>
 
+    <!-- 暫停彈窗 -->
     <div id="pause-modal" class="popup-overlay hidden">
         <div class="popup-box" style="align-items: center;">
             <h1 class="popup-title" style="color: #fff; margin-bottom: 15px;">已暫停</h1>
@@ -308,6 +315,7 @@
         </div>
     </div>
 
+    <!-- 結束彈窗 -->
     <div id="game-over-modal" class="popup-overlay hidden">
         <div class="popup-box" style="align-items: center;">
             <h1 id="game-over-title" class="popup-title" style="color: #f87171;">遊戲結束</h1>
@@ -325,6 +333,7 @@
 </div>
 
 <script>
+    // 🍏 防放大與全域變數宣告
     document.addEventListener('gesturestart', e => e.preventDefault());
     document.addEventListener('dblclick', e => e.preventDefault(), {passive:false});
     
@@ -373,136 +382,127 @@
     canvas.addEventListener('touchcancel',handleTE,{passive:false});
     function handleTE(e){e.preventDefault();if(joystickTouchId===null)return;let L=false;for(let i=0;i<e.changedTouches.length;i++){if(e.changedTouches[i].identifier===joystickTouchId){L=true;break;}}if(L){isTouching=false;joystickOrigin=null;joystickCurrent=null;touchVector={x:0,y:0};joystickTouchId=null;}}
 
+    // 🎵 16-bit 雙軌合成器音效引擎
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx;
     let activeOscillators = 0; 
     let bgmInterval = null;
+    let bossBgmInterval = null;
     let bgmStep = 0;
 
     function initAudio() { if(!audioCtx) { audioCtx = new AudioContext(); } if(audioCtx.state === 'suspended') { audioCtx.resume(); } }
     
-    function playTone(freq, type, duration, vol=0.1) {
-        if(!audioCtx || activeOscillators > 8) return; 
+    function playSynth(freq, type, duration, vol=0.1, isBass=false) {
+        if(!audioCtx || activeOscillators > 14) return; 
         try {
-            activeOscillators++;
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            if(type === 'sawtooth') { osc.frequency.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration); }
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
-            setTimeout(() => { activeOscillators--; }, duration * 1000);
-        } catch(e){ activeOscillators--; }
+            activeOscillators += 2;
+            let t = audioCtx.currentTime;
+            
+            let osc1 = audioCtx.createOscillator();
+            let osc2 = audioCtx.createOscillator();
+            let filter = audioCtx.createBiquadFilter();
+            let gain = audioCtx.createGain();
+            
+            osc1.type = type;
+            osc2.type = isBass ? 'triangle' : 'square';
+            
+            osc1.frequency.setValueAtTime(freq, t);
+            osc2.frequency.setValueAtTime(isBass ? freq/2 : freq * 1.01, t); 
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(freq * (isBass ? 2 : 4), t);
+            filter.frequency.exponentialRampToValueAtTime(Math.max(100, freq/2), t + duration);
+            
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+            
+            osc1.connect(filter); osc2.connect(filter);
+            filter.connect(gain); gain.connect(audioCtx.destination);
+            
+            osc1.start(t); osc2.start(t);
+            osc1.stop(t + duration); osc2.stop(t + duration);
+            setTimeout(() => { activeOscillators -= 2; }, duration * 1000);
+        } catch(e) { activeOscillators -= 2; }
     }
     
     function startBGM() {
         if(!audioCtx) return;
-        if(bgmInterval) clearInterval(bgmInterval);
+        stopBGM(); stopBossBGM();
         bgmStep = 0;
         let baseFreq = selectedStageIndex === 0 ? 55 : 65; 
-        let notes = [baseFreq, baseFreq, baseFreq, baseFreq*1.2, baseFreq, baseFreq, baseFreq, baseFreq*1.5];
+        let notes = [baseFreq, baseFreq*1.2, baseFreq, baseFreq*1.5, baseFreq*1.2, baseFreq, baseFreq*0.8, baseFreq];
         bgmInterval = setInterval(() => {
             if(gameState !== 'playing' && gameState !== 'dying') return;
-            try {
-                let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.value = notes[bgmStep % notes.length] * (bossSpawned ? 1.5 : 1); 
-                gain.gain.setValueAtTime(bossSpawned ? 0.08 : 0.05, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-                bgmStep++;
-            } catch(e) {}
+            let freq = notes[bgmStep % notes.length];
+            playSynth(freq, 'sawtooth', 0.15, 0.05, true);
+            bgmStep++;
         }, 220); 
     }
     function stopBGM() { if(bgmInterval) clearInterval(bgmInterval); }
+
+    function startBossBGM() {
+        if(!audioCtx) return;
+        stopBGM(); stopBossBGM();
+        bgmStep = 0;
+        // 緊湊、壓迫感極強的 16-bit Boss 旋律
+        let bassNotes = [40, 40, 42, 40, 45, 40, 42, 40]; 
+        let arpNotes = [300, 450, 600, 450, 800, 600, 450, 600]; 
+        bossBgmInterval = setInterval(() => {
+            if(gameState !== 'playing' && gameState !== 'dying') return;
+            let bassFreq = bassNotes[bgmStep % bassNotes.length];
+            let arpFreq = arpNotes[bgmStep % arpNotes.length];
+            
+            playSynth(bassFreq, 'square', 0.15, 0.1, true); 
+            if (bgmStep % 2 === 0) {
+                playSynth(arpFreq, 'sawtooth', 0.1, 0.03, false); 
+            }
+            bgmStep++;
+        }, 120); 
+    }
+    function stopBossBGM() { if(bossBgmInterval) clearInterval(bossBgmInterval); }
+
+    function soundBossEntry() {
+        if(!audioCtx || activeOscillators > 10) return;
+        try {
+            activeOscillators += 2;
+            let t = audioCtx.currentTime;
+            let osc = audioCtx.createOscillator(); let osc2 = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            let filter = audioCtx.createBiquadFilter();
+            
+            osc.type = 'sawtooth'; osc2.type = 'square';
+            osc.frequency.setValueAtTime(60, t); osc.frequency.exponentialRampToValueAtTime(20, t + 3.0);
+            osc2.frequency.setValueAtTime(61, t); osc2.frequency.exponentialRampToValueAtTime(21, t + 3.0);
+            
+            gain.gain.setValueAtTime(0.8, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 3.0);
+            
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(100, t);
+            filter.frequency.linearRampToValueAtTime(2000, t + 1.5);
+            filter.frequency.linearRampToValueAtTime(100, t + 3.0);
+            
+            osc.connect(filter); osc2.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(t); osc2.start(t); osc.stop(t + 3.0); osc2.stop(t + 3.0);
+            setTimeout(() => { activeOscillators -= 2; }, 3000);
+        } catch(e) { activeOscillators -= 2; }
+    }
 
     let lastSoundFrame = { hit: 0, shoot: 0, gem: 0 };
     function soundShoot() { 
         if(frameCount - lastSoundFrame.shoot < 4) return; 
         lastSoundFrame.shoot = frameCount; 
-        if(!audioCtx || activeOscillators > 8) return; 
-        try {
-            activeOscillators++;
-            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-            osc.type = 'square'; 
-            osc.frequency.setValueAtTime(1200, audioCtx.currentTime); 
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.1); 
-            gain.gain.setValueAtTime(0.03, audioCtx.currentTime); 
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1); 
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            setTimeout(() => { activeOscillators--; }, 100);
-        } catch(e){ activeOscillators--; }
+        playSynth(1200, 'square', 0.1, 0.03);
     }
-    function soundHit() { if(frameCount - lastSoundFrame.hit < 4) return; lastSoundFrame.hit = frameCount; playTone(100, 'sawtooth', 0.05, 0.02); } 
-    function soundGem() { if(frameCount - lastSoundFrame.gem < 2) return; lastSoundFrame.gem = frameCount; playTone(1200, 'sine', 0.08, 0.05); }
-    function soundClick() { playTone(600, 'sine', 0.1, 0.1); }
-    function soundDash() { 
-        if(!audioCtx || activeOscillators > 8) return;
-        try {
-            activeOscillators++;
-            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-            osc.type = 'sine'; osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-            setTimeout(() => { activeOscillators--; }, 300);
-        } catch(e){ activeOscillators--; }
-    }
+    function soundHit() { if(frameCount - lastSoundFrame.hit < 4) return; lastSoundFrame.hit = frameCount; playSynth(150, 'sawtooth', 0.05, 0.02, true); } 
+    function soundGem() { if(frameCount - lastSoundFrame.gem < 2) return; lastSoundFrame.gem = frameCount; playSynth(1200, 'sine', 0.08, 0.05); }
+    function soundClick() { playSynth(600, 'sine', 0.1, 0.1); }
+    function soundDash() { playSynth(800, 'sine', 0.3, 0.1); }
     function soundLevelUp() { 
-        if(!audioCtx) return; playTone(440, 'sine', 0.2, 0.1); setTimeout(()=>playTone(554, 'sine', 0.2, 0.1), 100); setTimeout(()=>playTone(659, 'sine', 0.4, 0.1), 200); 
+        if(!audioCtx) return; playSynth(440, 'square', 0.2, 0.05); setTimeout(()=>playSynth(554, 'square', 0.2, 0.05), 100); setTimeout(()=>playSynth(659, 'square', 0.4, 0.05), 200); 
     }
-    function soundExplosion() { 
-        if(!audioCtx || activeOscillators > 8) return;
-        try {
-            activeOscillators++;
-            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 1.0);
-            gain.gain.setValueAtTime(0.4, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.0);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 1.0);
-            setTimeout(() => { activeOscillators--; }, 1000);
-        } catch(e){ activeOscillators--; }
-    }
-    function soundPlasmaStrike() {
-        if(!audioCtx || activeOscillators > 8) return;
-        try {
-            activeOscillators++;
-            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(2500, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
-            gain.gain.setValueAtTime(0.25, audioCtx.currentTime); 
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-            
-            let osc2 = audioCtx.createOscillator();
-            osc2.type = 'square';
-            osc2.frequency.setValueAtTime(150, audioCtx.currentTime);
-            osc2.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.5);
-            osc2.connect(gain);
-            osc2.start(); osc2.stop(audioCtx.currentTime + 0.5);
-
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            setTimeout(() => { activeOscillators--; }, 500);
-        } catch(e){ activeOscillators--; }
-    }
-    function soundError() {
-        if(!audioCtx || activeOscillators > 8) return;
-        try {
-            activeOscillators++;
-            let osc = audioCtx.createOscillator(); let gain = audioCtx.createGain();
-            osc.type = 'square'; osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.4);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-            setTimeout(() => { activeOscillators--; }, 400);
-        } catch(e){ activeOscillators--; }
-    }
+    function soundExplosion() { playSynth(150, 'sawtooth', 1.0, 0.3, true); }
+    function soundPlasmaStrike() { playSynth(2500, 'sawtooth', 0.5, 0.2); }
+    function soundError() { playSynth(400, 'square', 0.4, 0.15); }
 
     let saveData = { coins: 0, upgrades: {}, achievements: [] };
     try { 
@@ -551,7 +551,7 @@
     function hideAllModals() { document.querySelectorAll('.modal, .popup-overlay').forEach(m=>m.classList.add('hidden')); document.getElementById('splash-screen').classList.add('hidden'); document.getElementById('radiation-warning').style.display='none'; }
     
     function enterTitle() { hideAllModals(); document.getElementById('title-screen').classList.remove('hidden'); gameState='menu'; updateMenuCoins(); }
-    function backToMainMenu() { soundClick(); stopBGM(); enterTitle(); }
+    function backToMainMenu() { soundClick(); stopBGM(); stopBossBGM(); enterTitle(); }
     function goToShop() { soundClick(); hideAllModals(); document.getElementById('shop-menu').classList.remove('hidden'); gameState='shop'; renderShop(); }
     function goToAchievements() { 
         soundClick(); hideAllModals(); document.getElementById('achievements-menu').classList.remove('hidden'); 
@@ -625,122 +625,112 @@
         enemySpawnQueue -= spawnThisFrame;
     }
 
-    // 🦆 開發者模式：強制召喚 Boss
     window.devSpawnBoss = function() {
         if(bossSpawned || gameState !== 'playing') return;
         gameSeconds = 300; 
         safeUpdate('time-display', '05:00');
         bossSpawned = true;
         spawnLeviathan();
-        soundClick();
+        soundBossEntry(); 
+        setTimeout(() => startBossBGM(), 2000); 
     };
 
     function spawnLeviathan() { 
         enemies=[]; 
         let sr=Math.max(canvas.width,canvas.height)/2+100;
         currentBoss={
-            type:'leviathan', isBoss:true, name:'【虛空魔蛸】',
-            x:worldX, y:worldY-sr, size:100, speed:player.speed*0.7, // 提速，確保極致壓迫
+            type:'leviathan', isBoss:true, name:'【機甲魔蛸】',
+            x:worldX, y:worldY-sr, size:100, speed:player.speed*0.8, 
             hp:200000, maxHp:200000, angle:Math.PI/2, rotSpeed:0, vertices:[],
             actionTimer:0, targetAngle:0, knockbackX:0, knockbackY:0, damageFlash:0, color:'#000', kbResist:0, droneCd:0, dead: false
         }; 
         enemies.push(currentBoss);
         let timeDisp = document.getElementById('time-display');
         if(timeDisp) timeDisp.classList.add('boss');
-        startBGM(); 
+        
+        if (gameSeconds === 300 && bossSpawned) {
+            soundBossEntry();
+            setTimeout(() => startBossBGM(), 2000);
+        }
     }
     
-    // 🦑 動態純 Canvas 繪製虛空魔蛸 (完全程序化)
+    // 🦑 純 Canvas 動態算法繪製：極簡星際機甲魔蛸 (Logo Style)
     function drawVoidOctopus(ctx, size, frameCount, isFlash) {
         let s = size / 100;
         ctx.scale(s, s);
         
-        // 觸手向後 (-X 方向) 擺動，因為 Boss 是面朝玩家 (+X) 的
+        let bodyColor = isFlash ? '#fff' : '#000000'; 
+        let neonOutline = isFlash ? '#fca5a5' : '#0ea5e9'; 
+        let tentacleGlow = isFlash ? '#fff' : '#22d3ee'; 
+        
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        let targetRot = Math.atan2(worldY - currentBoss.y, worldX - currentBoss.x);
+        // Boss 繪製時會將 context 旋轉 -en.angle，所以這裡補償回來面向玩家
+        ctx.rotate(targetRot + Math.PI/2); 
+        
+        // 8 條幾何捲曲觸手
         for (let i = 0; i < 8; i++) {
             ctx.save();
             let angle = (i - 3.5) * 0.35;
             ctx.rotate(angle);
             
-            // 動態蠕動公式
-            let wave1 = Math.sin(frameCount * 0.05 + i * 0.8) * 40;
-            let wave2 = Math.cos(frameCount * 0.03 + i * 0.5) * 50;
-            let len = 100 + Math.sin(frameCount * 0.04 + i) * 30;
+            let breathe = Math.sin(frameCount * 0.05 + i) * 15;
             
+            // 觸手輪廓
             ctx.beginPath();
-            ctx.moveTo(-20, 0);
-            ctx.bezierCurveTo(-60, wave1, -90, wave2, -140 - Math.abs(wave1), wave2 * 1.2);
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(-60, 40 + breathe, -100 - breathe, 10);
+            ctx.quadraticCurveTo(-130 - breathe, -20, -110, -40);
+            ctx.quadraticCurveTo(-90, -60, -70, -30);
+            ctx.quadraticCurveTo(-80, 0, -40, 10);
+            ctx.lineTo(0, 0);
             
-            // 觸手本體
-            ctx.lineWidth = 22 - Math.abs(i - 3.5) * 2; 
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = isFlash ? '#fff' : (i % 2 === 0 ? '#6d28d9' : '#4c1d95');
+            ctx.fillStyle = bodyColor;
+            ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = neonOutline;
             ctx.stroke();
 
-            // 發光吸盤 (繪製為虛線)
+            // 內側發光吸盤 (虛線)
             ctx.beginPath();
-            ctx.moveTo(-20, 5); 
-            ctx.bezierCurveTo(-60, wave1 + 5, -90, wave2 + 5, -140 - Math.abs(wave1), wave2 * 1.2 + 5);
-            ctx.lineWidth = 8;
-            ctx.setLineDash([0, 18]); 
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = isFlash ? '#fca5a5' : '#c084fc';
+            ctx.moveTo(-10, 0);
+            ctx.quadraticCurveTo(-55, 30 + breathe, -95 - breathe, 5);
+            ctx.lineWidth = 6;
+            ctx.setLineDash([2, 18]); 
+            ctx.strokeStyle = tentacleGlow;
             ctx.stroke();
             
             ctx.restore();
         }
-
-        // 頭部與軀幹 (+X 方向為前)
+        
+        // 銳利的星際頭部 (Mantle)
         ctx.beginPath();
-        ctx.ellipse(-15, 0, 65, 45, 0, 0, Math.PI * 2); // 軀幹後移
-        ctx.arc(25, 0, 40, 0, Math.PI * 2); // 臉部
+        ctx.moveTo(15, 0);
+        ctx.lineTo(40, -30);
+        ctx.quadraticCurveTo(80, -40, 100, -10);
+        ctx.lineTo(110, 0); 
+        ctx.lineTo(100, 10);
+        ctx.quadraticCurveTo(80, 40, 40, 30);
+        ctx.closePath();
         
-        let grad = ctx.createRadialGradient(10, 0, 10, -20, 0, 80);
-        grad.addColorStop(0, isFlash ? '#fff' : '#8b5cf6');
-        grad.addColorStop(1, isFlash ? '#f87171' : '#312e81');
-        ctx.fillStyle = grad;
+        ctx.fillStyle = bodyColor;
         ctx.fill();
-        
         ctx.lineWidth = 4;
-        ctx.strokeStyle = isFlash ? '#fca5a5' : '#c084fc';
+        ctx.strokeStyle = neonOutline;
         ctx.stroke();
-
-        // 生物螢光斑點
-        if (!isFlash) {
-            ctx.fillStyle = 'rgba(45, 212, 191, 0.7)'; // 青色螢光
-            const spots = [
-                {x: -30, y: -20, r: 10}, {x: -45, y: 15, r: 14}, 
-                {x: -10, y: 25, r: 8}, {x: -60, y: -5, r: 12},
-                {x: 5, y: -30, r: 6}, {x: -20, y: 35, r: 7}
-            ];
-            spots.forEach(sp => {
-                ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI*2); ctx.fill();
-            });
-
-            // 邪惡的豎瞳巨眼
-            const drawEye = (ex, ey) => {
-                ctx.save();
-                ctx.translate(ex, ey);
-                ctx.rotate(Math.PI / 8 * (ey > 0 ? 1 : -1)); 
-                
-                // 眼白 (發光黃)
-                ctx.beginPath(); ctx.ellipse(0, 0, 18, 25, 0, 0, Math.PI*2);
-                ctx.fillStyle = '#fef08a';
-                ctx.shadowBlur = 15; ctx.shadowColor = '#eab308';
-                ctx.fill();
-                
-                // 豎瞳
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = '#000';
-                ctx.beginPath(); ctx.ellipse(4, 0, 4, 12, 0, 0, Math.PI*2); ctx.fill();
-                
-                // 反光
-                ctx.fillStyle = '#fff';
-                ctx.beginPath(); ctx.arc(6, -8, 3, 0, Math.PI*2); ctx.fill();
-                ctx.restore();
-            };
+        
+        // 邪惡的豎瞳幾何眼
+        if(!isFlash) {
+            ctx.fillStyle = '#facc15'; 
+            ctx.shadowBlur = 15; ctx.shadowColor = '#facc15';
+            ctx.beginPath(); ctx.moveTo(60, -15); ctx.lineTo(75, -20); ctx.lineTo(65, -8); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(60, 15); ctx.lineTo(75, 20); ctx.lineTo(65, 8); ctx.fill();
+            ctx.shadowBlur = 0;
             
-            drawEye(35, -20); // 左眼
-            drawEye(35, 20);  // 右眼
+            ctx.fillStyle = neonOutline;
+            ctx.beginPath(); ctx.arc(30, 0, 8 + Math.sin(frameCount*0.1)*3, 0, Math.PI*2); ctx.fill();
         }
     }
 
@@ -772,7 +762,7 @@
         for(let ps in player.passives){let l=player.passives[ps].level; if(l<PASSIVE_DB[ps].maxLevel) p.push({n:PASSIVE_DB[ps].name, lv:l+1, i:PASSIVE_DB[ps].icon,d:PASSIVE_DB[ps].desc,t:'強化',cl:'passive',a:()=>{upgradePassive(ps)}});} 
         
         if(p.length===0){
-            p.push({n:'醫療包',i:'🍗',d:'立刻恢復 50 點生命值',t:'物資',cl:'',a:()=>{player.hp=Math.min(player.maxHp,player.hp+50)}});
+            p.push({n:'醫療包',i:'🍗',d:'立刻恢復 50 點生命值',t:'物 আশ্রয়',cl:'',a:()=>{player.hp=Math.min(player.maxHp,player.hp+50)}});
             p.push({n:'小金庫',i:'💰',d:'獲得 25 金幣',t:'物資',cl:'',a:()=>{collectedCoins+=25;safeUpdate('ingame-coin-display',collectedCoins)}});
         } 
         
@@ -829,17 +819,17 @@
 
     function triggerSkill() { if(player.skillCd <= 0 && gameState === 'playing') skillRequested = true; }
 
-    function gameOver(v=false) { stopBGM(); if(v){ playTone(400, 'sine', 0.2, 0.1); setTimeout(()=>playTone(600, 'sine', 0.4, 0.1), 200); } else { soundError(); } gameState='gameover'; setHudVisible(false); let t=document.getElementById('game-over-title'); if(v){t.innerText='任務完成';t.style.color='#facc15';}else{t.innerText='訊號中斷';t.style.color='#f87171';} safeUpdate('final-level',player.level); safeUpdate('final-score',score); safeUpdate('final-time',`${String(Math.floor(gameSeconds/60)).padStart(2,'0')}:${String(gameSeconds%60).padStart(2,'0')}`); safeUpdate('final-coins',collectedCoins); saveData.coins+=collectedCoins; saveGame(); document.getElementById('game-over-modal').classList.remove('hidden'); }
+    function gameOver(v=false) { stopBGM(); stopBossBGM(); if(v){ playSynth(400, 'sine', 0.2, 0.1); setTimeout(()=>playSynth(600, 'sine', 0.4, 0.1), 200); } else { soundError(); } gameState='gameover'; setHudVisible(false); let t=document.getElementById('game-over-title'); if(v){t.innerText='任務完成';t.style.color='#facc15';}else{t.innerText='訊號中斷';t.style.color='#f87171';} safeUpdate('final-level',player.level); safeUpdate('final-score',score); safeUpdate('final-time',`${String(Math.floor(gameSeconds/60)).padStart(2,'0')}:${String(gameSeconds%60).padStart(2,'0')}`); safeUpdate('final-coins',collectedCoins); saveData.coins+=collectedCoins; saveGame(); document.getElementById('game-over-modal').classList.remove('hidden'); }
     function togglePause() { soundClick(); if(gameState==='playing'){gameState='paused'; setHudVisible(false); document.getElementById('pause-modal').classList.remove('hidden');} }
     function resumeFromPause() { soundClick(); gameState='playing'; document.getElementById('pause-modal').classList.add('hidden'); setHudVisible(true); }
-    function quitToMenu() { soundClick(); stopBGM(); saveData.coins+=collectedCoins; saveGame(); setHudVisible(false); enterTitle(); }
+    function quitToMenu() { soundClick(); stopBGM(); stopBossBGM(); saveData.coins+=collectedCoins; saveGame(); setHudVisible(false); enterTitle(); }
 
     function update() {
         particlesThisFrame = 0; 
         
         if(gameState==='dying'){ 
             deathTimer--; deathShockwaveRadius += 80; deathFlashAlpha *= 0.9; 
-            for(let i=particles.length-1;i>=0;i--){ let p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.life--; p.vx*=0.95; p.vx*=0.95; if(p.life<=0) particles.splice(i,1); }
+            for(let i=particles.length-1;i>=0;i--){ let p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.life--; p.vx*=0.95; p.vy*=0.95; if(p.life<=0) particles.splice(i,1); }
             for(let i=floatTexts.length-1;i>=0;i--){ let f=floatTexts[i]; f.y-=0.5; f.life--; if(f.life<=0) floatTexts.splice(i,1); }
             for(let i=enemies.length-1;i>=0;i--){ let e=enemies[i]; e.x+=Math.cos(e.angle)*e.speed*0.02; e.y+=Math.sin(e.angle)*e.speed*0.02; }
             if(deathTimer<=0) gameOver(false); 
@@ -850,7 +840,7 @@
         if(frameCount%60===0){ 
             gameSeconds++; safeUpdate('time-display',`${String(Math.floor(gameSeconds/60)).padStart(2,'0')}:${String(gameSeconds%60).padStart(2,'0')}`); 
             if(gameSeconds===60) checkAchievement('survive_1m'); if(gameSeconds===300) checkAchievement('survive_5m'); 
-            if(gameSeconds===300 && !bossSpawned){bossSpawned=true; spawnLeviathan();} 
+            if(gameSeconds===300 && !bossSpawned){bossSpawned=true; spawnLeviathan(); soundBossEntry(); setTimeout(()=>startBossBGM(), 2000);} 
         }
         
         if(player.passives.regen && frameCount%300===0){ player.hp=Math.min(player.maxHp,player.hp+player.passives.regen.level); addFloatingText(player,"+"+player.passives.regen.level,'#4ade80'); }
@@ -868,7 +858,7 @@
             skillRequested = false; let sId = CHARACTERS[selectedCharIndex].skill; let sDb = SKILL_DB[sId]; player.skillCd = sDb.cd; player.skillTimer = sDb.duration; document.getElementById('dash-btn').classList.add('cooldown');
             if (sId === 'dash') { soundDash(); player.isDashing = true; screenShake = Math.min(screenShake+8,12); } 
             else if (sId === 'shield') { soundLevelUp(); player.isShielded = true; } 
-            else if (sId === 'timestop') { playTone(300, 'square', 0.5, 0.1); player.isTimeStopped = true; screenShake = 20; } 
+            else if (sId === 'timestop') { playSynth(300, 'square', 0.5, 0.1); player.isTimeStopped = true; screenShake = 20; } 
             else if (sId === 'heal') { soundLevelUp(); player.hp = Math.min(player.maxHp, player.hp + player.maxHp*0.5); addFloatingText(player, "維修 +50%", '#4ade80'); spawnParticles(worldX, worldY, '#4ade80', 50); } 
             else if (sId === 'bladestorm') { soundShoot(); screenShake = 15; let dmg = globalDmgMult * 50; for(let i=0; i<24; i++) { let ang = (i/24)*Math.PI*2; bullets.push({type:'blade', isEvo:true, x:worldX, y:worldY, vx:Math.cos(ang)*12, vy:Math.sin(ang)*12, life:60, damage:dmg, aoe:40, angle:ang, dead:false}); } } 
             else if (sId === 'magnet') { soundGem(); spawnParticles(worldX, worldY, '#facc15', 50); gems.forEach(g => { g.isMoving = true; g.speed = 10; }); coinsArr.forEach(c => { c.isMoving = true; c.speed = 10; }); }
@@ -898,6 +888,7 @@
 
         for (let i = hazards.length - 1; i >= 0; i--) {
             let hz = hazards[i]; if (!player.isTimeStopped) hz.timer--;
+            
             if (hz.state === 'warning' && hz.timer <= 0) {
                 hz.state = 'strike'; hz.timer = 15; soundPlasmaStrike(); screenShake = Math.max(screenShake, 25); 
                 enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - hz.x, e.y - hz.y) < hz.radius + e.size) { let dmg = (e.maxHp * 10) + 9999999; e.hp -= dmg; e.damageFlash = 10; } });
@@ -968,7 +959,6 @@
             if(e.dead) continue;
 
             if (!player.isTimeStopped) {
-                // 🦑 小怪推擠 (Boss免疫)
                 if(!e.isBoss) {
                     for(let k=1; k<=3; k++){
                         if(i-k >= 0){
@@ -993,40 +983,35 @@
                 if(e.type === 'leviathan'){
                     let ex = worldX - e.x, ey = worldY - e.y, distBoss = Math.hypot(ex, ey);
                     
-                    // 🦑 Boss 橡皮筋防風箏追蹤機制
                     if(distBoss > Math.max(cw, ch) + 400) {
                         let jumpAngle = player.angle + (Math.random()-0.5)*Math.PI/2;
                         e.x = worldX + Math.cos(jumpAngle)*(Math.max(cw, ch)/2 + 200);
                         e.y = worldY + Math.sin(jumpAngle)*(Math.max(cw, ch)/2 + 200);
-                        spawnParticles(e.x, e.y, '#a855f7', 50);
+                        spawnParticles(e.x, e.y, '#0ea5e9', 50); 
                         distBoss = Math.hypot(worldX - e.x, worldY - e.y);
                     }
 
                     e.actionTimer++;
                     if (e.actionTimer < 400) {
-                        // 🦑 無盡追擊 (移除了原本 > 250 才追的限制)
                         e.x += (ex / distBoss) * e.speed; 
                         e.y += (ey / distBoss) * e.speed; 
-                        e.angle = Math.atan2(ey, ex); // 面向玩家
+                        e.angle = Math.atan2(ey, ex);
                         
-                        // 🦑 水滴噴墨攻擊
                         if (e.actionTimer % 60 === 0) {
                             soundShoot();
                             for(let ink = -2; ink <= 2; ink++) {
                                 let inkAngle = e.angle + ink * 0.2;
                                 enemies.push({
-                                    type: 'boss_ink', isBoss: false, x: e.x, y: e.y, size: 15, speed: 6, hp: 1, maxHp: 1, 
+                                    type: 'boss_ink', isBoss: false, x: e.x, y: e.y, size: 16, speed: 6, hp: 1, maxHp: 1, 
                                     angle: inkAngle, rotSpeed: 0, vertices: [], knockbackX: Math.cos(inkAngle)*6, knockbackY: Math.sin(inkAngle)*6, 
-                                    damageFlash: 0, color: '#1e1b4b', kbResist: 1, dead: false
+                                    damageFlash: 0, color: '#000', kbResist: 1, dead: false
                                 });
                             }
                         }
                     } else if (e.actionTimer === 400) {
-                        // 鎖定雷電目標
                         e.targetAngle = Math.atan2(ey, ex);
                         soundError(); 
                     } else if (e.actionTimer > 500 && e.actionTimer <= 530) {
-                        // 🦑 虛空雷電發射與傷害判定
                         let pAngle = Math.atan2(worldY - e.y, worldX - e.x);
                         let angleDiff = Math.abs(pAngle - e.targetAngle);
                         if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
@@ -1039,10 +1024,11 @@
                     } else if (e.actionTimer > 550) {
                         e.actionTimer = 0;
                     }
-                } else if(e.type === 'boss_bullet' || e.type === 'boss_ink'){
+                } else if (e.type === 'boss_ink') {
                     e.x += e.knockbackX; e.y += e.knockbackY;
-                    // 🦑 墨斗滴落粒子特效
-                    if(e.type === 'boss_ink' && frameCount % 3 === 0) spawnParticles(e.x, e.y, '#3b0764', 2);
+                    if(frameCount % 3 === 0) spawnParticles(e.x, e.y, '#000000', 2);
+                } else if(e.type === 'boss_bullet'){
+                    e.x += e.knockbackX; e.y += e.knockbackY;
                 } else {
                     if(e.type === 'charger'){
                         e.actionTimer++;
@@ -1227,100 +1213,6 @@
     function drawRadarPointer(tX,tY,c) { let dx=tX-worldX, dy=tY-worldY, d=Math.hypot(dx,dy); if(d>Math.max(canvas.width,canvas.height)/2){let a=Math.atan2(dy,dx), hw=canvas.width/2-30, hh=canvas.height/2-30, sc=Math.min(hw/Math.abs(Math.cos(a)),hh/Math.abs(Math.sin(a))); ctx.save(); ctx.translate(canvas.width/2+Math.cos(a)*sc,canvas.height/2+Math.sin(a)*sc); ctx.rotate(a); ctx.globalAlpha=0.5+Math.sin(frameCount*0.1)*0.5; ctx.fillStyle=c; ctx.beginPath(); ctx.moveTo(15,0); ctx.lineTo(-10,10); ctx.lineTo(-5,0); ctx.lineTo(-10,-10); ctx.closePath(); ctx.fill(); ctx.restore(); } }
     function drawPlayerShip(cId,isD,dF) { ctx.fillStyle=dF>0?'#ef4444':(isD?'#a78bfa':'#e2e8f0'); ctx.strokeStyle=dF>0?'#fca5a5':'#38bdf8'; ctx.lineWidth=2; ctx.beginPath(); if(cId==='heavy'){ctx.moveTo(14,10);ctx.lineTo(-12,14);ctx.lineTo(-12,-14);ctx.lineTo(14,-10);ctx.closePath();ctx.moveTo(0,-6);ctx.lineTo(20,-2);ctx.lineTo(20,2);ctx.lineTo(0,6);}else if(cId==='scout'){ctx.moveTo(22,0);ctx.lineTo(-8,8);ctx.lineTo(-16,20);ctx.lineTo(-4,0);ctx.lineTo(-16,-20);ctx.lineTo(-8,-8);ctx.closePath();}else if(cId==='engineer'){ctx.arc(0,0,12,0,Math.PI*2);ctx.moveTo(16,-4);ctx.lineTo(16,4);ctx.moveTo(-16,-4);ctx.lineTo(-16,4);}else if(cId==='ghost'){ctx.arc(4,0,16,Math.PI*0.2,Math.PI*1.8,true);ctx.quadraticCurveTo(-10,0,4,15);}else if(cId==='scavenger'){ctx.moveTo(16,0);ctx.lineTo(-10,12);ctx.lineTo(-4,0);ctx.lineTo(-14,-10);ctx.lineTo(4,-8);ctx.closePath();}else{ctx.moveTo(18,0);ctx.lineTo(-12,14);ctx.lineTo(-6,0);ctx.lineTo(-12,-14);ctx.closePath();} ctx.fill();ctx.stroke(); if(keys['ArrowUp']||keys['KeyW']||keys['ArrowDown']||keys['KeyS']||keys['ArrowLeft']||keys['KeyA']||keys['ArrowRight']||keys['KeyD']||isTouching||isD){ctx.fillStyle=isD?'#d946ef':'#f97316';ctx.beginPath();if(cId==='heavy'){ctx.moveTo(-12,-8);ctx.lineTo(-20-Math.random()*10,-8);ctx.lineTo(-12,-4);ctx.moveTo(-12,8);ctx.lineTo(-20-Math.random()*10,8);ctx.lineTo(-12,4);}else if(cId==='engineer'){ctx.arc(0,0,14+Math.random()*4,Math.PI*0.7,Math.PI*1.3);}else if(cId==='scavenger'){ctx.moveTo(-4,-3);ctx.lineTo(-18-Math.random()*(isD?15:5),0);ctx.lineTo(-4,3);}else{ctx.moveTo(-7,-4);ctx.lineTo(-18-Math.random()*(isD?15:5),0);ctx.lineTo(-7,4);}ctx.fill();} }
 
-    // 🦑 動態純 Canvas 繪製虛空魔蛸 (完全程序化)
-    function drawVoidOctopus(ctx, size, frameCount, isFlash) {
-        let s = size / 100;
-        ctx.scale(s, s);
-        
-        // 觸手向後 (-X 方向) 擺動，因為 Boss 是面朝玩家 (+X) 的
-        for (let i = 0; i < 8; i++) {
-            ctx.save();
-            let angle = (i - 3.5) * 0.35;
-            ctx.rotate(angle);
-            
-            // 動態蠕動公式
-            let wave1 = Math.sin(frameCount * 0.05 + i * 0.8) * 40;
-            let wave2 = Math.cos(frameCount * 0.03 + i * 0.5) * 50;
-            let len = 100 + Math.sin(frameCount * 0.04 + i) * 30;
-            
-            ctx.beginPath();
-            ctx.moveTo(-20, 0);
-            ctx.bezierCurveTo(-60, wave1, -90, wave2, -140 - Math.abs(wave1), wave2 * 1.2);
-            
-            // 觸手本體
-            ctx.lineWidth = 22 - Math.abs(i - 3.5) * 2; 
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = isFlash ? '#fff' : (i % 2 === 0 ? '#6d28d9' : '#4c1d95');
-            ctx.stroke();
-
-            // 發光吸盤 (繪製為虛線)
-            ctx.beginPath();
-            ctx.moveTo(-20, 5); 
-            ctx.bezierCurveTo(-60, wave1 + 5, -90, wave2 + 5, -140 - Math.abs(wave1), wave2 * 1.2 + 5);
-            ctx.lineWidth = 8;
-            ctx.setLineDash([0, 18]); 
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = isFlash ? '#fca5a5' : '#c084fc';
-            ctx.stroke();
-            
-            ctx.restore();
-        }
-
-        // 頭部與軀幹 (+X 方向為前)
-        ctx.beginPath();
-        ctx.ellipse(-15, 0, 65, 45, 0, 0, Math.PI * 2); // 軀幹後移
-        ctx.arc(25, 0, 40, 0, Math.PI * 2); // 臉部
-        
-        let grad = ctx.createRadialGradient(10, 0, 10, -20, 0, 80);
-        grad.addColorStop(0, isFlash ? '#fff' : '#8b5cf6');
-        grad.addColorStop(1, isFlash ? '#f87171' : '#312e81');
-        ctx.fillStyle = grad;
-        ctx.fill();
-        
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = isFlash ? '#fca5a5' : '#c084fc';
-        ctx.stroke();
-
-        // 生物螢光斑點
-        if (!isFlash) {
-            ctx.fillStyle = 'rgba(45, 212, 191, 0.7)'; // 青色螢光
-            const spots = [
-                {x: -30, y: -20, r: 10}, {x: -45, y: 15, r: 14}, 
-                {x: -10, y: 25, r: 8}, {x: -60, y: -5, r: 12},
-                {x: 5, y: -30, r: 6}, {x: -20, y: 35, r: 7}
-            ];
-            spots.forEach(sp => {
-                ctx.beginPath(); ctx.arc(sp.x, sp.y, sp.r, 0, Math.PI*2); ctx.fill();
-            });
-
-            // 邪惡的豎瞳巨眼
-            const drawEye = (ex, ey) => {
-                ctx.save();
-                ctx.translate(ex, ey);
-                ctx.rotate(Math.PI / 8 * (ey > 0 ? 1 : -1)); 
-                
-                // 眼白 (發光黃)
-                ctx.beginPath(); ctx.ellipse(0, 0, 18, 25, 0, 0, Math.PI*2);
-                ctx.fillStyle = '#fef08a';
-                ctx.shadowBlur = 15; ctx.shadowColor = '#eab308';
-                ctx.fill();
-                
-                // 豎瞳
-                ctx.shadowBlur = 0;
-                ctx.fillStyle = '#000';
-                ctx.beginPath(); ctx.ellipse(4, 0, 4, 12, 0, 0, Math.PI*2); ctx.fill();
-                
-                // 反光
-                ctx.fillStyle = '#fff';
-                ctx.beginPath(); ctx.arc(6, -8, 3, 0, Math.PI*2); ctx.fill();
-                ctx.restore();
-            };
-            
-            drawEye(35, -20); // 左眼
-            drawEye(35, 20);  // 右眼
-        }
-    }
-
     function draw() {
         if(['splash','title','menu','char_select','stage_select','shop','achievements'].includes(gameState))return;
         const bgH=STAGES[selectedStageIndex].bgHue||280; ctx.fillStyle='#020205'; ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -1414,14 +1306,89 @@
                 if(p.x>-200&&p.x<canvas.width+200&&p.y>-200&&p.y<canvas.height+200){
                     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(en.angle);
                     
-                    // 🦑 繪製純 Canvas 動態虛空魔蛸
+                    // 🦑 繪製純 Canvas 極簡星際機甲魔蛸 (Logo Style)
                     if(en.type === 'leviathan'){
-                        drawVoidOctopus(ctx, en.size, frameCount, en.damageFlash > 0);
+                        ctx.rotate(-en.angle); 
+                        let s = en.size / 100;
+                        ctx.scale(s, s);
+                        
+                        let bodyColor = en.damageFlash > 0 ? '#fff' : '#000000'; 
+                        let neonOutline = en.damageFlash > 0 ? '#fca5a5' : '#0ea5e9'; 
+                        let tentacleGlow = en.damageFlash > 0 ? '#fff' : '#22d3ee'; 
+                        
+                        ctx.lineCap = 'round';
+                        ctx.lineJoin = 'round';
+                        
+                        let targetRot = Math.atan2(worldY - en.y, worldX - en.x);
+                        ctx.rotate(targetRot);
+                        
+                        // 8 條幾何捲曲觸手
+                        for (let i = 0; i < 8; i++) {
+                            ctx.save();
+                            let angle = (i - 3.5) * 0.35;
+                            ctx.rotate(angle);
+                            
+                            let breathe = Math.sin(frameCount * 0.05 + i) * 15;
+                            
+                            // 觸手輪廓
+                            ctx.beginPath();
+                            ctx.moveTo(0, 0);
+                            ctx.quadraticCurveTo(-60, 40 + breathe, -100 - breathe, 10);
+                            ctx.quadraticCurveTo(-130 - breathe, -20, -110, -40);
+                            ctx.quadraticCurveTo(-90, -60, -70, -30);
+                            ctx.quadraticCurveTo(-80, 0, -40, 10);
+                            ctx.lineTo(0, 0);
+                            
+                            ctx.fillStyle = bodyColor;
+                            ctx.fill();
+                            ctx.lineWidth = 4;
+                            ctx.strokeStyle = neonOutline;
+                            ctx.stroke();
+
+                            // 內側發光吸盤 (虛線)
+                            ctx.beginPath();
+                            ctx.moveTo(-10, 0);
+                            ctx.quadraticCurveTo(-55, 30 + breathe, -95 - breathe, 5);
+                            ctx.lineWidth = 6;
+                            ctx.setLineDash([2, 18]); 
+                            ctx.strokeStyle = tentacleGlow;
+                            ctx.stroke();
+                            
+                            ctx.restore();
+                        }
+                        
+                        // 銳利的星際頭部 (Mantle)
+                        ctx.beginPath();
+                        ctx.moveTo(15, 0);
+                        ctx.lineTo(40, -30);
+                        ctx.quadraticCurveTo(80, -40, 100, -10);
+                        ctx.lineTo(110, 0); 
+                        ctx.lineTo(100, 10);
+                        ctx.quadraticCurveTo(80, 40, 40, 30);
+                        ctx.closePath();
+                        
+                        ctx.fillStyle = bodyColor;
+                        ctx.fill();
+                        ctx.lineWidth = 4;
+                        ctx.strokeStyle = neonOutline;
+                        ctx.stroke();
+                        
+                        // 邪惡的豎瞳幾何眼
+                        if(en.damageFlash <= 0) {
+                            ctx.fillStyle = '#facc15'; 
+                            ctx.shadowBlur = 15; ctx.shadowColor = '#facc15';
+                            ctx.beginPath(); ctx.moveTo(60, -15); ctx.lineTo(75, -20); ctx.lineTo(65, -8); ctx.fill();
+                            ctx.beginPath(); ctx.moveTo(60, 15); ctx.lineTo(75, 20); ctx.lineTo(65, 8); ctx.fill();
+                            ctx.shadowBlur = 0;
+                            
+                            ctx.fillStyle = neonOutline;
+                            ctx.beginPath(); ctx.arc(30, 0, 8 + Math.sin(frameCount*0.1)*3, 0, Math.PI*2); ctx.fill();
+                        }
                         
                         // ⚡ 繪製狂暴虛空閃電光束
                         if (en.actionTimer >= 400 && en.actionTimer <= 500) {
                             ctx.save();
-                            ctx.rotate(en.targetAngle - en.angle); 
+                            ctx.rotate(en.targetAngle - targetRot); 
                             let alpha = (en.actionTimer - 400) / 100;
                             ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
                             ctx.lineWidth = 2 + Math.random()*2;
@@ -1430,10 +1397,9 @@
                             ctx.restore();
                         } else if (en.actionTimer > 500 && en.actionTimer <= 530) {
                             ctx.save();
-                            ctx.rotate(en.targetAngle - en.angle);
+                            ctx.rotate(en.targetAngle - targetRot);
                             ctx.globalCompositeOperation = 'screen';
                             
-                            // 雷電核心 (鋸齒狀)
                             ctx.strokeStyle = '#ffffff';
                             ctx.lineWidth = 30;
                             ctx.lineCap = 'round';
@@ -1451,24 +1417,26 @@
                             }
                             ctx.stroke();
 
-                            // 外圍閃電光暈
                             ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
                             ctx.lineWidth = 80;
                             ctx.stroke();
-
                             ctx.restore();
                         }
+                        
                     } else if (en.type === 'boss_ink') {
-                        // 💧 水滴狀噴墨斗
+                        // 💧 黏稠劇毒水滴墨斗
                         let inkAngle = Math.atan2(en.knockbackY || Math.sin(en.angle), en.knockbackX || Math.cos(en.angle));
                         ctx.rotate(inkAngle - en.angle);
                         ctx.beginPath();
-                        ctx.moveTo(en.size, 0);
-                        ctx.quadraticCurveTo(0, en.size*0.8, -en.size*1.5, en.size*0.5); // Tail
-                        ctx.quadraticCurveTo(-en.size, 0, -en.size*1.5, -en.size*0.5);
-                        ctx.quadraticCurveTo(0, -en.size*0.8, en.size, 0);
-                        ctx.fillStyle = '#020617'; ctx.fill();
-                        ctx.strokeStyle = '#9333ea'; ctx.lineWidth = 2; ctx.stroke();
+                        ctx.arc(0, 0, en.size, 0, Math.PI*2);
+                        ctx.arc(-en.size*0.6, en.size*0.5, en.size*0.7, 0, Math.PI*2);
+                        ctx.arc(-en.size*0.8, -en.size*0.3, en.size*0.6, 0, Math.PI*2);
+                        ctx.arc(-en.size*1.5, 0, en.size*0.4, 0, Math.PI*2);
+                        ctx.fillStyle = '#000000'; ctx.fill();
+                        ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 2; 
+                        ctx.shadowBlur = 10; ctx.shadowColor = '#0ea5e9';
+                        ctx.stroke();
+                        ctx.shadowBlur = 0;
                     } else {
                         if(en.damageFlash>0){ctx.fillStyle='#fff';ctx.strokeStyle='#f87171';}else{ctx.fillStyle=en.color;ctx.strokeStyle=(en.type==='elite'?'#f87171':'#64748b');}
                         ctx.lineWidth=en.type==='elite'?3:2;
@@ -1532,9 +1500,9 @@
             
             let ta = Math.max(0, Math.min(1, (30-deathTimer)/5)); 
             
-            // 🅰️ 死亡字體極限放大：分成上下兩排，確保不裁切且具備史詩級衝擊力
-            let mainFontSize = Math.max(50, Math.min(130, canvas.width * 0.2)); 
-            let subFontSize = Math.max(16, Math.min(32, canvas.width * 0.06));
+            let mainFontSize = Math.max(60, Math.min(160, canvas.width * 0.22)); 
+            // 🅰️ 終極修復：大幅調高死亡畫面字幕的字體大小下限
+            let subFontSize = Math.max(28, Math.min(48, canvas.width * 0.08));
 
             if(glassCracks && glassCracks.length > 0) {
                 ctx.save();
@@ -1592,7 +1560,6 @@
             ctx.textAlign='center'; ctx.textBaseline='middle'; 
             let ty = canvas.height/2;
             
-            // 將長句分為兩行繪製，極限放大不裁切
             drawTextLayer("CRITICAL", ty - mainFontSize * 0.7, mainFontSize, true, true);
             drawTextLayer("DAMAGE", ty + mainFontSize * 0.7, mainFontSize, true, true);
 
